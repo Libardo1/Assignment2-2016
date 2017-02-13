@@ -1,0 +1,61 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=3.0cm]{geometry}
+\usepackage{minted}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{bbm}
+\usepackage[table]{xcolor}
+\newcommand{\wo}{\mathbbm{w}}
+
+\pdfinfo{
+/Title (report2)
+/Author (Felipe Salvatore)}
+\setcounter{secnumdepth}{0}  
+
+
+\title{Report: assigment 2}
+\author{Felipe Salvatore\\
+\texttt{felipessalvador@googlemail.com}}
+\begin{document}
+\maketitle
+\section{1}
+\textbf{1a)} 
+\begin{minted}{python}
+def softmax(x):
+    # ## YOUR CODE HERE
+    all_constants = - tf.reduce_max(x, axis=1)
+    x = x + tf.expand_dims(all_constants, 1)
+    x = tf.exp(x)
+    all_sums = tf.reduce_sum(x, 1)
+    all_sums = tf.pow(all_sums, -1)
+    out = x*tf.expand_dims(all_sums, 1)
+    # ## END YOUR CODE
+    return out
+\end{minted}
+
+
+\textbf{1b)}
+\begin{minted}{python}
+def cross_entropy_loss(y, yhat):
+    # ## YOUR CODE HERE
+    y = tf.cast(y, tf.float32)
+    yhat = tf.log(yhat)
+    out = - tf.reduce_sum(y*yhat)
+    out = tf.reshape(out, (1,))
+    # ## END YOUR CODE
+    return out
+\end{minted}
+
+\textbf{1c)}
+
+\section{2}
+
+
+
+
+
+
+\end{document}
