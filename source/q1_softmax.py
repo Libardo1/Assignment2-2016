@@ -4,24 +4,6 @@ import unittest
 import random
 
 
-def np_softmax(x):
-    """
-    Softmax function implemented in numpy.
-    :x type: np.array
-    :rtype: np.array
-    """
-
-    if type(x[0]) != np.ndarray:
-        x = x.reshape((1, len(x)))
-    all_constants = - np.amax(x, axis=1)
-    x = x+all_constants[:, np.newaxis]
-    x = np.exp(x)
-    all_sums = np.sum(x, 1)
-    all_sums = np.power(all_sums, -1)
-    y = x*all_sums[:, np.newaxis]
-    return y
-
-
 def softmax(x):
     """
      Compute the softmax function in tensorflow.
@@ -78,7 +60,9 @@ def cross_entropy_loss(y, yhat):
             this tensor in the problem.
     """
     # ## YOUR CODE HERE
-    out = tf.reduce_sum(y)
+    y = tf.cast(y, tf.float32)
+    yhat = tf.log(yhat)
+    out = - tf.reduce_sum(y*yhat)
     out = tf.reshape(out, (1,))
     # ## END YOUR CODE
     return out
@@ -128,7 +112,7 @@ def test_cross_entropy_loss_basic():
 class TestSoftmax(unittest.TestCase):
 
     def test_upperbound(self):
-        for k in range(50):
+        for k in range(10):
             y = np.ndarray(shape=(1, 10), dtype=float)
             for i in range(10):
                 y[0][i] = random.randint(-100, 100)
@@ -141,7 +125,7 @@ class TestSoftmax(unittest.TestCase):
                             .format(y, sum_test))
 
     def test_high_low(self):
-        for k in range(50):
+        for k in range(10):
             y = np.ndarray(shape=(2, 2), dtype=float)
             y[0][0] = random.randint(-20000, -10000)
             y[0][1] = y[0][0]+1
@@ -160,19 +144,18 @@ class TestSoftmax(unittest.TestCase):
 class TestCrossEntropy(unittest.TestCase):
 
     def test_random(self):
-        for k in range(5):
+        for k in range(10):
             y = np.array([0, 0, 1])
             yhat = np.ndarray(shape=(1, 3), dtype=float)
             yhat[0][0] = random.randint(1, 10)
             yhat[0][1] = random.randint(10, 20)
             yhat[0][2] = random.randint(30, 50)
-            yhat = np_softmax(yhat)
+            yhat = softmax(tf.convert_to_tensor(yhat, dtype=tf.float32))
             test1 = cross_entropy_loss(tf.convert_to_tensor(y, dtype=tf.int32),
-                                       tf.convert_to_tensor(yhat,
-                                                            dtype=tf.float32)
-                                       )
+                                       yhat)
             with tf.Session():
                 test1 = test1.eval()
+                yhat = yhat.eval()
                 result = -np.log(yhat[0][2])
             self.assertTrue(np.amax(np.fabs(test1 - result)) <= 1e-6,
                             """\n if y = {0} and yhat = {1} \n,
