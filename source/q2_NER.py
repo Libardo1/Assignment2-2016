@@ -137,6 +137,7 @@ class NERModel(LanguageModel):
     Hint: You might find tf.nn.embedding_lookup useful.
     Hint: See following link to understand what -1 in a shape means.
       https://www.tensorflow.org/versions/r0.8/api_docs/python/array_ops.html#reshape
+    https://www.tensorflow.org/api_docs/python/tf/reshape
     Hint: Check the last slide from the TensorFlow lecture.
     Hint: Here are the dimensions of the variables you will need to create:
 
