@@ -17,6 +17,7 @@ def xavier_weight_init():
     This function will be used as a variable scope initializer.
 
     https://www.tensorflow.org/versions/r0.7/how_tos/variable_scope/index.html#initializers-in-variable-scope
+    https://www.tensorflow.org/programmers_guide/variable_scope
 
     Args:
       shape: Tuple or 1-d array that species dimensions of requested tensor.

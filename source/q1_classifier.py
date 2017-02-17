@@ -141,12 +141,18 @@ class SoftmaxModel(Model):
         # ## YOUR CODE HERE
         Wshape = [self.config.n_features, self.config.n_classes]
         bshape = [self.config.batch_size, self.config.n_classes]
-        Winit = tf.zeros(Wshape)
-        binit = tf.zeros(bshape)
+        Winit = tf.constant_initializer(np.zeros(Wshape))
+        binit = tf.constant_initializer(np.zeros(bshape))
 
         with tf.variable_scope("linear-model"):
-            W = tf.get_variable("weights", dtype='float32', initializer=Winit)
-            b = tf.get_variable("bias", dtype='float32', initializer=binit)
+            W = tf.get_variable("weights",
+                                shape=Wshape,
+                                dtype='float32',
+                                initializer=Winit)
+            b = tf.get_variable("bias",
+                                shape=bshape,
+                                dtype='float32',
+                                initializer=binit)
             out = softmax(tf.matmul(input_data, W) + b)
         # ## END YOUR CODE
         return out
