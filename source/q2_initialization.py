@@ -1,5 +1,7 @@
 import numpy as np
 import tensorflow as tf
+import unittest
+import random
 
 
 def xavier_weight_init():
@@ -54,6 +56,31 @@ def test_initialization_basic():
     print "Basic (non-exhaustive) Xavier initialization tests pass\n"
 
 
+class TestXavier(unittest.TestCase):
+    def test_bounds(self):
+        for i in range(100):
+            random_row = random.randint(1, 100)
+            random_collumn = random.randint(1, 100)
+            epsilon = np.sqrt(6.)/np.sqrt(np.sum(random_row + random_collumn))
+            random_row_obs = random.randint(0, random_row-1)
+            random_collumn_obs = random.randint(0, random_collumn-1)
+            xavier_initializer = xavier_weight_init()
+            shape = (random_row, random_collumn)
+            xavier_mat = xavier_initializer(shape)
+            with tf.Session():
+                test = xavier_mat.eval()[random_row_obs][random_collumn_obs]
+            self.assertTrue(test <= epsilon,
+                            """bigger than the upper bound,
+                            test = {0}, epsilon
+                            = {1}"""
+                            .format(test, epsilon))
+            self.assertTrue(-epsilon <= test,
+                            """lower than the lower bound,
+                            test = {0}, -epsilon
+                            = {1}"""
+                            .format(test, -epsilon))
+
+
 def test_initialization():
     """
     Use this space to test your Xavier initialization code by running:
@@ -63,8 +90,13 @@ def test_initialization():
     """
     print "Running your tests..."
     # ## YOUR CODE HERE
-    print('sex')
+    suite = unittest.TestSuite()
+    for method in dir(TestXavier):
+        if method.startswith("test"):
+            suite.addTest(TestXavier(method))
+    unittest.TextTestRunner().run(suite)
     # ## END YOUR CODE
 
 if __name__ == "__main__":
     test_initialization_basic()
+    test_initialization()
