@@ -6,6 +6,7 @@ This repository contains all my solutions for the [Assigment 2](http://cs224d.st
 * Numpy
 * Matplotlib
 * Tensorflow
+* Pandas
 
 ## Usage
 
