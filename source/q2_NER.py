@@ -103,8 +103,8 @@ class NERModel(LanguageModel):
                                                         self.config.label_size],
                                                  name="labels_placeholder")
         self.dropout_placeholder = tf.placeholder(tf.float32,
-                                                 shape=[],
-                                                 name="dropout_value")
+                                                  shape=[],
+                                                  name="dropout_value")
         # ## END YOUR CODE
 
     def create_feed_dict(self, input_batch, dropout, label_batch=None):
@@ -165,13 +165,13 @@ class NERModel(LanguageModel):
             # ## YOUR CODE HERE
             Linit = tf.constant_initializer(self.wv)
             L = tf.get_variable("L",
-                                 shape=[len(self.wv), embed_size],
-                                 dtype='float32',
-                                 initializer=Linit)
+                                shape=[len(self.wv), self.config.embed_size],
+                                dtype='float32',
+                                initializer=Linit)
             window = tf.nn.embedding_lookup(L, self.input_placeholder)
-            window = reshape(window,
-                             [-1,
-                              self.config.window_size*self.config.embed_size])
+            window = tf.reshape(window,
+                                (-1,
+                                 self.config.window_size*self.config.embed_size))
         # ## END YOUR CODE
         return window
 
@@ -204,8 +204,44 @@ class NERModel(LanguageModel):
           output: tf.Tensor of shape (batch_size, label_size)
         """
         # ## YOUR CODE HERE
-        raise NotImplementedError
-        # ## END YOUR CODE
+        # shapes
+        Wshape = (self.config.window_size*self.config.embed_size,
+                  self.config.hidden_size)
+        b1shape = (1, self.config.hidden_size)
+        Ushape = (self.config.hidden_size, self.config.label_size)
+        b2shape = (1, self.config.label_size)
+
+        # initializers
+        b1init = tf.constant_initializer(np.zeros(b1shape))
+        b2init = tf.constant_initializer(np.zeros(b2shape))
+        xavier_initializer = xavier_weight_init()
+        Winit = xavier_initializer(Wshape)
+        Uinit = xavier_initializer(Ushape)
+
+        with tf.variable_scope("Layer"):
+            self.W = tf.get_variable("weights",
+                                dtype='float32',
+                                initializer=Winit)
+            b1 = tf.get_variable("bias",
+                                 shape=b1shape,
+                                 dtype='float32',
+                                 initializer=b1init)
+            linear_op = tf.matmul(window, self.W) + b1
+            first_output = tf.nn.dropout(tf.tanh(linear_op),
+                                         self.config.dropout,
+                                         name="output")
+        with tf.variable_scope("Softmax"):
+            self.U = tf.get_variable("weights",
+                                dtype='float32',
+                                initializer=Uinit)
+            b2 = tf.get_variable("bias",
+                                 shape=b2shape,
+                                 dtype='float32',
+                                 initializer=b2init)
+            output = tf.nn.dropout(tf.matmul(first_output, self.U) + b2,
+                                   self.config.dropout,
+                                   name="output")
+        # END YOUR CODE
         return output
 
     def add_loss_op(self, y):
@@ -220,7 +256,9 @@ class NERModel(LanguageModel):
           loss: A 0-d tensor (scalar)
         """
         # ## YOUR CODE HERE
-        raise NotImplementedError
+        pred = self.labels_placeholder
+        loss = tf.nn.softmax_cross_entropy_with_logits(y, pred)
+        + self.config.l2*0.5*(tf.reduce_sum(tf.pow(self.W, 2)) + tf.reduce_sum(tf.pow(self.U, 2)))
         # ## END YOUR CODE
         return loss
 
@@ -244,7 +282,8 @@ class NERModel(LanguageModel):
           train_op: The Op for training.
         """
         # ## YOUR CODE HERE
-        raise NotImplementedError
+        optimizer = tf.train.AdamOptimizer(self.config.lr)
+        train_op = optimizer.minimize(loss)
         # ## END YOUR CODE
         return train_op
 
@@ -378,7 +417,7 @@ def test_NER():
     with tf.Graph().as_default():
         model = NERModel(config)
 
-        init = tf.initialize_all_variables()
+        init = tf.global_variables_initializer()
         saver = tf.train.Saver()
     with tf.Session() as session:
         best_val_loss = float('inf')

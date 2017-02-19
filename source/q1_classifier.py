@@ -139,8 +139,8 @@ class SoftmaxModel(Model):
           out: A tensor of shape (batch_size, n_classes)
         """
         # ## YOUR CODE HERE
-        Wshape = [self.config.n_features, self.config.n_classes]
-        bshape = [self.config.batch_size, self.config.n_classes]
+        Wshape = (self.config.n_features, self.config.n_classes)
+        bshape = (self.config.batch_size, self.config.n_classes)
         Winit = tf.constant_initializer(np.zeros(Wshape))
         binit = tf.constant_initializer(np.zeros(bshape))
 
