@@ -94,11 +94,11 @@ class NERModel(LanguageModel):
         (Don't change the variable names)
         """
         # ## YOUR CODE HERE
-        self.input_placeholder = tf.placeholder(tf.float32,
+        self.input_placeholder = tf.placeholder(tf.int32,
                                                 shape=[None,
                                                        self.config.window_size],
                                                 name="input_placeholder")
-        self.labels_placeholder = tf.placeholder(tf.int32,
+        self.labels_placeholder = tf.placeholder(tf.float32,
                                                  shape=[None,
                                                         self.config.label_size],
                                                  name="labels_placeholder")
@@ -163,7 +163,15 @@ class NERModel(LanguageModel):
         # The embedding lookup is currently only implemented for the CPU
         with tf.device('/cpu:0'):
             # ## YOUR CODE HERE
-            raise NotImplementedError
+            Linit = tf.constant_initializer(self.wv)
+            L = tf.get_variable("L",
+                                 shape=[len(self.wv), embed_size],
+                                 dtype='float32',
+                                 initializer=Linit)
+            window = tf.nn.embedding_lookup(L, self.input_placeholder)
+            window = reshape(window,
+                             [-1,
+                              self.config.window_size*self.config.embed_size])
         # ## END YOUR CODE
         return window
 
