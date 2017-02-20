@@ -307,10 +307,10 @@ class NERModel(LanguageModel):
         # ## END YOUR CODE
         return train_op
 
-    def __init__(self, config):
+    def __init__(self, config, debug=False):
         """Constructs the network using the helper functions defined above."""
         self.config = config
-        self.load_data(debug=False)
+        self.load_data(debug)
         self.add_placeholders()
         window = self.add_embedding()
         y = self.add_model(window)
@@ -427,7 +427,7 @@ def save_predictions(predictions, filename):
             f.write(str(prediction) + "\n")
 
 
-def test_NER(config, save=True, verbose=True):
+def test_NER(config, save=True, verbose=True, debug=False):
     """Test NER model implementation.
     You can use this function to test your implementation of the Named Entity
     Recognition network. When debugging, set max_epochs in the Config object to
@@ -435,7 +435,7 @@ def test_NER(config, save=True, verbose=True):
     """
     initial_time = time.time()
     with tf.Graph().as_default():
-        model = NERModel(config)
+        model = NERModel(config, debug)
 
         init = tf.global_variables_initializer()
         saver = tf.train.Saver()
@@ -486,6 +486,6 @@ def test_NER(config, save=True, verbose=True):
 
 if __name__ == "__main__":
     config = Config()
-    val_loss, duration = test_NER(config)
+    val_loss, duration = test_NER(config, debug=True)
     print("The best val_loss is {0} and the whole training takes {1}(s)".format(val_loss,
                                                                duration))

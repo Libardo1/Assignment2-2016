@@ -20,7 +20,10 @@ times = []
 
 for dropout in DROPOUT:
     config = Config(dropout=dropout)
-    val_loss, duration = test_NER(config, save=False, verbose=False)
+    val_loss, duration = test_NER(config,
+                                  save=False,
+                                  verbose=False,
+                                  debug=True)
     results.append(val_loss)
     times.append(duration)
 
