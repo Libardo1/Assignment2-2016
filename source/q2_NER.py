@@ -236,7 +236,7 @@ class NERModel(LanguageModel):
                                          self.config.dropout,
                                          name="output")
             tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.W, 2)))
-            tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.b1, 2)))
+            # tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.b1, 2)))
         with tf.variable_scope("Softmax"):
             self.U = tf.get_variable("weights",
                                      dtype='float32',
@@ -248,7 +248,7 @@ class NERModel(LanguageModel):
                                    self.config.dropout,
                                    name="output")
             tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.U, 2)))
-            tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.b2, 2)))
+            # tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.b2, 2)))
         # END YOUR CODE
         return output
 
