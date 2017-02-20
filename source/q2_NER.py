@@ -19,16 +19,27 @@ class Config(object):
     information parameters. Model objects are passed a Config() object at
     instantiation.
     """
-    embed_size = 50
-    batch_size = 64
-    label_size = 5
-    hidden_size = 100
-    max_epochs = 24
-    early_stopping = 2
-    dropout = 0.9
-    lr = 0.001
-    l2 = 0.001
-    window_size = 3
+    def __init__(self,
+                 embed_size=50,
+                 batch_size=64,
+                 label_size=5,
+                 hidden_size=100,
+                 max_epochs=24,
+                 early_stopping=2,
+                 dropout=0.9,
+                 lr=0.001,
+                 l2=0.001,
+                 window_size=3):
+        self.embed_size = embed_size
+        self.batch_size = batch_size
+        self.label_size = label_size
+        self.hidden_size = hidden_size
+        self.max_epochs = max_epochs
+        self.early_stopping = early_stopping
+        self.dropout = dropout
+        self.lr = lr
+        self.l2 = l2
+        self.window_size = window_size
 
 
 class NERModel(LanguageModel):
@@ -416,7 +427,7 @@ def save_predictions(predictions, filename):
             f.write(str(prediction) + "\n")
 
 
-def test_NER(config, save=True):
+def test_NER(config, save=True, verbose=True):
     """Test NER model implementation.
     You can use this function to test your implementation of the Named Entity
     Recognition network. When debugging, set max_epochs in the Config object to
@@ -454,11 +465,12 @@ def test_NER(config, save=True):
                 if epoch - best_val_epoch > config.early_stopping:
                     break
                 ###
-                confusion = calculate_confusion(config,
-                                                predictions,
-                                                model.y_dev)
-                print_confusion(confusion, model.num_to_tag)
-                print 'Total time: {}'.format(time.time() - start)
+                if verbose:
+                    confusion = calculate_confusion(config,
+                                                    predictions,
+                                                    model.y_dev)
+                    print_confusion(confusion, model.num_to_tag)
+                    print 'Total time: {}'.format(time.time() - start)
 
             if save:
                 saver.restore(session, './weights/ner.weights')
