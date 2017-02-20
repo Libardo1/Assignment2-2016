@@ -127,9 +127,13 @@ class NERModel(LanguageModel):
           feed_dict: The feed dictionary mapping from placeholders to values.
         """
         # ## YOUR CODE HERE
-        feed_dict = {self.input_placeholder: input_batch,
-                     self.labels_placeholder: label_batch,
-                     self.dropout_placeholder: dropout}
+        if label_batch is None:
+            feed_dict = {self.input_placeholder: input_batch,
+                         self.dropout_placeholder: dropout}
+        else:
+            feed_dict = {self.input_placeholder: input_batch,
+                         self.labels_placeholder: label_batch,
+                         self.dropout_placeholder: dropout}
         # ## END YOUR CODE
         return feed_dict
 
@@ -220,8 +224,9 @@ class NERModel(LanguageModel):
 
         with tf.variable_scope("Layer"):
             self.W = tf.get_variable("weights",
-                                dtype='float32',
-                                initializer=Winit)
+                                     dtype='float32',
+                                     initializer=Winit)
+            tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.W, 2)))
             b1 = tf.get_variable("bias",
                                  shape=b1shape,
                                  dtype='float32',
@@ -232,8 +237,9 @@ class NERModel(LanguageModel):
                                          name="output")
         with tf.variable_scope("Softmax"):
             self.U = tf.get_variable("weights",
-                                dtype='float32',
-                                initializer=Uinit)
+                                     dtype='float32',
+                                     initializer=Uinit)
+            tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.U, 2)))
             b2 = tf.get_variable("bias",
                                  shape=b2shape,
                                  dtype='float32',
@@ -257,8 +263,9 @@ class NERModel(LanguageModel):
         """
         # ## YOUR CODE HERE
         pred = self.labels_placeholder
-        loss = tf.nn.softmax_cross_entropy_with_logits(y, pred)
-        + self.config.l2*0.5*(tf.reduce_sum(tf.pow(self.W, 2)) + tf.reduce_sum(tf.pow(self.U, 2)))
+        cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y, pred))
+        regularization = self.config.l2*0.5*sum(tf.get_collection("reg"))
+        loss = cross_entropy + regularization
         # ## END YOUR CODE
         return loss
 
@@ -369,8 +376,8 @@ class NERModel(LanguageModel):
                 losses.append(loss)
             else:
                 preds = session.run(self.predictions, feed_dict=feed)
-                predicted_indices = preds.argmax(axis=1)
-                results.extend(predicted_indices)
+            predicted_indices = preds.argmax(axis=1)
+            results.extend(predicted_indices)
         return np.mean(losses), results
 
 
@@ -419,42 +426,44 @@ def test_NER():
 
         init = tf.global_variables_initializer()
         saver = tf.train.Saver()
-    with tf.Session() as session:
-        best_val_loss = float('inf')
-        best_val_epoch = 0
-        session.run(init)
-        for epoch in xrange(config.max_epochs):
-            print 'Epoch {}'.format(epoch)
-            start = time.time()
-            ###
-            train_loss, train_acc = model.run_epoch(session, model.X_train,
-                                                    model.y_train)
-            val_loss, predictions = model.predict(session,
-                                                  model.X_dev,
-                                                  model.y_dev)
-            print 'Training loss: {}'.format(train_loss)
-            print 'Training acc: {}'.format(train_acc)
-            print 'Validation loss: {}'.format(val_loss)
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
-                best_val_epoch = epoch
-                if not os.path.exists("./weights"):
-                    os.makedirs("./weights")
+        with tf.Session() as session:
+            best_val_loss = float('inf')
+            best_val_epoch = 0
+            session.run(init)
+            for epoch in xrange(config.max_epochs):
+                print 'Epoch {}'.format(epoch)
+                start = time.time()
+                ###
+                train_loss, train_acc = model.run_epoch(session, model.X_train,
+                                                        model.y_train)
+                val_loss, predictions = model.predict(session,
+                                                      model.X_dev,
+                                                      model.y_dev)
+                print 'Training loss: {}'.format(train_loss)
+                print 'Training acc: {}'.format(train_acc)
+                print 'Validation loss: {}'.format(val_loss)
+                if val_loss < best_val_loss:
+                    best_val_loss = val_loss
+                    best_val_epoch = epoch
+                    if not os.path.exists("./weights"):
+                        os.makedirs("./weights")
 
-                saver.save(session, './weights/ner.weights')
-            if epoch - best_val_epoch > config.early_stopping:
-                break
-            ###
-            confusion = calculate_confusion(config, predictions, model.y_dev)
-            print_confusion(confusion, model.num_to_tag)
-            print 'Total time: {}'.format(time.time() - start)
+                    saver.save(session, './weights/ner.weights')
+                if epoch - best_val_epoch > config.early_stopping:
+                    break
+                ###
+                confusion = calculate_confusion(config,
+                                                predictions,
+                                                model.y_dev)
+                print_confusion(confusion, model.num_to_tag)
+                print 'Total time: {}'.format(time.time() - start)
 
-        saver.restore(session, './weights/ner.weights')
-        print 'Test'
-        print '=-=-='
-        print 'Writing predictions to q2_test.predicted'
-        _, predictions = model.predict(session, model.X_test, model.y_test)
-        save_predictions(predictions, "q2_test.predicted")
+            saver.restore(session, './weights/ner.weights')
+            print 'Test'
+            print '=-=-='
+            print 'Writing predictions to q2_test.predicted'
+            _, predictions = model.predict(session, model.X_test, model.y_test)
+            save_predictions(predictions, "q2_test.predicted")
 
 if __name__ == "__main__":
     test_NER()
