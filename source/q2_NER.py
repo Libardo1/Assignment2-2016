@@ -416,7 +416,7 @@ def save_predictions(predictions, filename):
             f.write(str(prediction) + "\n")
 
 
-def test_NER(config):
+def test_NER(config, save=True):
     """Test NER model implementation.
     You can use this function to test your implementation of the Named Entity
     Recognition network. When debugging, set max_epochs in the Config object to
@@ -447,10 +447,10 @@ def test_NER(config):
                 if val_loss < best_val_loss:
                     best_val_loss = val_loss
                     best_val_epoch = epoch
-                    if not os.path.exists("./weights"):
-                        os.makedirs("./weights")
-
-                    saver.save(session, './weights/ner.weights')
+                    if save:
+                        if not os.path.exists("./weights"):
+                            os.makedirs("./weights")
+                        saver.save(session, './weights/ner.weights')
                 if epoch - best_val_epoch > config.early_stopping:
                     break
                 ###
@@ -460,12 +460,15 @@ def test_NER(config):
                 print_confusion(confusion, model.num_to_tag)
                 print 'Total time: {}'.format(time.time() - start)
 
-            saver.restore(session, './weights/ner.weights')
-            print 'Test'
-            print '=-=-='
-            print 'Writing predictions to q2_test.predicted'
-            _, predictions = model.predict(session, model.X_test, model.y_test)
-            save_predictions(predictions, "q2_test.predicted")
+            if save:
+                saver.restore(session, './weights/ner.weights')
+                print 'Test'
+                print '=-=-='
+                print 'Writing predictions to q2_test.predicted'
+                _, predictions = model.predict(session,
+                                               model.X_test,
+                                               model.y_test)
+                save_predictions(predictions, "q2_test.predicted")
     duration = time.time() - initial_time
     return best_val_loss, duration
 
