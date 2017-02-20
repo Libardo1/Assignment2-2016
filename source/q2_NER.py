@@ -216,37 +216,39 @@ class NERModel(LanguageModel):
         b2shape = (1, self.config.label_size)
 
         # initializers
-        b1init = tf.constant_initializer(np.zeros(b1shape))
-        b2init = tf.constant_initializer(np.zeros(b2shape))
+        # b1init = tf.constant_initializer(np.zeros(b1shape))
+        # b2init = tf.constant_initializer(np.zeros(b2shape))
         xavier_initializer = xavier_weight_init()
         Winit = xavier_initializer(Wshape)
+        b1init = xavier_initializer(b1shape)
         Uinit = xavier_initializer(Ushape)
+        b2init = xavier_initializer(b2shape)
 
         with tf.variable_scope("Layer"):
             self.W = tf.get_variable("weights",
                                      dtype='float32',
                                      initializer=Winit)
-            tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.W, 2)))
-            b1 = tf.get_variable("bias",
-                                 shape=b1shape,
-                                 dtype='float32',
-                                 initializer=b1init)
-            linear_op = tf.matmul(window, self.W) + b1
+            self.b1 = tf.get_variable("bias",
+                                      dtype='float32',
+                                      initializer=b1init)
+            linear_op = tf.matmul(window, self.W) + self.b1
             first_output = tf.nn.dropout(tf.tanh(linear_op),
                                          self.config.dropout,
                                          name="output")
+            tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.W, 2)))
+            tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.b1, 2)))
         with tf.variable_scope("Softmax"):
             self.U = tf.get_variable("weights",
                                      dtype='float32',
                                      initializer=Uinit)
-            tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.U, 2)))
-            b2 = tf.get_variable("bias",
-                                 shape=b2shape,
-                                 dtype='float32',
-                                 initializer=b2init)
-            output = tf.nn.dropout(tf.matmul(first_output, self.U) + b2,
+            self.b2 = tf.get_variable("bias",
+                                      dtype='float32',
+                                      initializer=b2init)
+            output = tf.nn.dropout(tf.matmul(first_output, self.U) + self.b2,
                                    self.config.dropout,
                                    name="output")
+            tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.U, 2)))
+            tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.b2, 2)))
         # END YOUR CODE
         return output
 
@@ -414,13 +416,13 @@ def save_predictions(predictions, filename):
             f.write(str(prediction) + "\n")
 
 
-def test_NER():
+def test_NER(config):
     """Test NER model implementation.
     You can use this function to test your implementation of the Named Entity
     Recognition network. When debugging, set max_epochs in the Config object to
     1 so you can rapidly iterate.
     """
-    config = Config()
+    initial_time = time.time()
     with tf.Graph().as_default():
         model = NERModel(config)
 
@@ -464,6 +466,11 @@ def test_NER():
             print 'Writing predictions to q2_test.predicted'
             _, predictions = model.predict(session, model.X_test, model.y_test)
             save_predictions(predictions, "q2_test.predicted")
+    duration = time.time() - initial_time
+    return best_val_loss, duration
 
 if __name__ == "__main__":
-    test_NER()
+    config = Config()
+    val_loss, duration = test_NER(config)
+    print("The best val_loss is {0} and the whole training takes {1}(s)".format(val_loss,
+                                                               duration))
