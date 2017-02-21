@@ -17,8 +17,8 @@ WINDOWS = [3, 4, 5, 6]
 results = []
 times = []
 
-for dropout in DROPOUT:
-    config = Config(dropout=dropout)
+for window in WINDOWS:
+    config = Config(window_size=window)
     val_loss, duration = test_NER(config,
                                   save=False,
                                   verbose=False,
