@@ -27,7 +27,7 @@ class Config(object):
                  max_epochs=24,
                  early_stopping=2,
                  dropout=0.991323729933,
-                 lr=0.001,
+                 lr=0.00365884577219,
                  l2=8.96478843852e-06,
                  window_size=3):
         self.embed_size = embed_size
