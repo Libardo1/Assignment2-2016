@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 number_of_exp = 10
 part1 = number_of_exp/2
 part2 = number_of_exp - part1
-lr1 = np.random.random_sample([part1]) / 1000
-lr2 = np.random.random_sample([part2]) / 10000
+lr1 = np.random.random_sample([part1]) / 100
+lr2 = np.random.random_sample([part2]) / 100
 LEARNING_RATE = np.concatenate((lr1, lr2))
 LEARNING_RATE.sort()
 results = []
