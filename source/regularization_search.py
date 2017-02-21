@@ -27,7 +27,7 @@ for regularizer in REGULARIZATION:
     val_loss, duration = test_NER(config,
                                   save=False,
                                   verbose=False,
-                                  debug=True)
+                                  debug=False)
     results.append(val_loss)
     times.append(duration)
 
@@ -35,7 +35,7 @@ for regularizer in REGULARIZATION:
 REGULARIZATION = list(REGULARIZATION)
 best_result = min(list(zip(results, REGULARIZATION, times)))
 result_string = """In an experiment with {0} random constants
-the best regularization constant is {1} with val_loss {2}. Using
+the best regularization constant is {1} with val_loss = {2}. Using
 this constant the training will take {3} seconds""".format(number_of_exp,
                                                            best_result[1],
                                                            best_result[0],

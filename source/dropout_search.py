@@ -23,7 +23,7 @@ for dropout in DROPOUT:
     val_loss, duration = test_NER(config,
                                   save=False,
                                   verbose=False,
-                                  debug=True)
+                                  debug=False)
     results.append(val_loss)
     times.append(duration)
 
@@ -31,7 +31,7 @@ for dropout in DROPOUT:
 DROPOUT = list(DROPOUT)
 best_result = min(list(zip(results, DROPOUT, times)))
 result_string = """In an experiment with {0} random constants
-the best dropout constant is {1} with val_loss {2}. Using
+the best dropout constant is {1} with val_loss = {2}. Using
 this constant the training will take {3} seconds""".format(number_of_exp,
                                                            best_result[1],
                                                            best_result[0],

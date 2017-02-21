@@ -28,7 +28,7 @@ class Config(object):
                  early_stopping=2,
                  dropout=0.9,
                  lr=0.001,
-                 l2=0.001,
+                 l2=8.96478843852e-06,
                  window_size=3):
         self.embed_size = embed_size
         self.batch_size = batch_size
