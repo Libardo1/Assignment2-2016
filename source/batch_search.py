@@ -13,36 +13,37 @@ import matplotlib.pyplot as plt
 # %matplotlib inline
 
 
-WINDOWS = [3, 4, 5, 6]
+BATCH = [14, 24, 34, 44, 54, 64, 74, 84, 94, 104]
 results = []
 times = []
 
-for window in WINDOWS:
-    config = Config(window_size=window)
+for batch in BATCH:
+    config = Config(batch_size=batch)
     val_loss, duration = test_NER(config,
                                   save=False,
                                   verbose=False,
-                                  debug=True)
+                                  debug=False)
     results.append(val_loss)
     times.append(duration)
 
-best_result = min(list(zip(results, WINDOWS, times)))
-result_string = """In an experiment with {0} windows sizes
+best_result = min(list(zip(results, BATCH, times)))
+result_string = """In an experiment with {0} batch sizes
 the best size is {1} with val_loss = {2}. Using
-this size the training will take {3} seconds""".format(len(WINDOWS),
+this size the training will take {3} seconds""".format(len(BATCH),
                                                        best_result[1],
                                                        best_result[0],
                                                        best_result[2])
 print(result_string)
 
-# Make a plot of dropout vs loss
-plt.plot(WINDOWS, results)
-plt.xlabel("window")
+# Make a plot of batch vs loss
+plt.plot(BATCH, results)
+plt.xlabel("batch")
 plt.ylabel("loss")
-plt.savefig("NER_window_loss.png")
+plt.savefig("NER_batch_loss.png")
 # plt.show()
 
-plt.plot(WINDOWS, times)
-plt.xlabel("window")
+# Make a plot of batch vs time
+plt.plot(BATCH, times)
+plt.xlabel("batch")
 plt.ylabel("time")
-plt.savefig("NER_window_time.png")
+plt.savefig("NER_batch_time.png")
