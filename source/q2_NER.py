@@ -21,7 +21,7 @@ class Config(object):
     """
     def __init__(self,
                  embed_size=50,
-                 batch_size=64,
+                 batch_size=84,
                  label_size=5,
                  hidden_size=100,
                  max_epochs=24,
