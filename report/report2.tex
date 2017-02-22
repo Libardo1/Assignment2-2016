@@ -7,6 +7,8 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{bbm}
+\usepackage{subcaption}
+\pagestyle{empty}
 \usepackage[table]{xcolor}
 \newcommand{\wo}{\mathbbm{w}}
 
@@ -229,9 +231,180 @@ And for $i \in \{1, \dots, |V|\}$
 \end{equation}
 
 \textbf{2c)}
+\begin{minted}{python}
+def xavier_weight_init():
+    
+    def _xavier_initializer(shape, **kwargs):
+        
+        # ## YOUR CODE HERE
+        epsilon = np.sqrt(6.)/np.sqrt(np.sum(shape))
+        out = tf.random_uniform(shape,
+                                minval=-epsilon,
+                                maxval=epsilon,
+                                dtype=tf.float32,
+                                name='weights')
+        # ## END YOUR CODE
+        return out
+    return _xavier_initializer
+
+\end{minted}
 
 \textbf{2d)}
 
+\begin{minted}{python}
+  def add_placeholders(self):
+        # ## YOUR CODE HERE
+        self.input_placeholder = tf.placeholder(tf.int32,
+                                                shape=[None,
+                                                       self.config.window_size],
+                                                name="input_placeholder")
+        self.labels_placeholder = tf.placeholder(tf.float32,
+                                                 shape=[None,
+                                                        self.config.label_size],
+                                                 name="labels_placeholder")
+        self.dropout_placeholder = tf.placeholder(tf.float32,
+                                                  shape=[],
+                                                  name="dropout_value")
+        # ## END YOUR CODE
+
+    def create_feed_dict(self, input_batch, dropout, label_batch=None):
+        
+        # ## YOUR CODE HERE
+        if label_batch is None:
+            feed_dict = {self.input_placeholder: input_batch,
+                         self.dropout_placeholder: dropout}
+        else:
+            feed_dict = {self.input_placeholder: input_batch,
+                         self.labels_placeholder: label_batch,
+                         self.dropout_placeholder: dropout}
+        # ## END YOUR CODE
+        return feed_dict
+
+    def add_embedding(self):
+        with tf.device('/cpu:0'):
+            # ## YOUR CODE HERE
+            Linit = tf.constant_initializer(self.wv)
+            L = tf.get_variable("L",
+                                shape=[len(self.wv), self.config.embed_size],
+                                dtype='float32',
+                                initializer=Linit)
+            window = tf.nn.embedding_lookup(L, self.input_placeholder)
+            window = tf.reshape(window,
+                                (-1,
+                                 self.config.window_size*self.config.embed_size))
+        # ## END YOUR CODE
+        return window
+
+  def add_model(self, window):
+     
+        # ## YOUR CODE HERE
+        # shapes
+        Wshape = (self.config.window_size*self.config.embed_size,
+                  self.config.hidden_size)
+        b1shape = (1, self.config.hidden_size)
+        Ushape = (self.config.hidden_size, self.config.label_size)
+        b2shape = (1, self.config.label_size)
+
+        # initializers
+        xavier_initializer = xavier_weight_init()
+        Winit = xavier_initializer(Wshape)
+        b1init = xavier_initializer(b1shape)
+        Uinit = xavier_initializer(Ushape)
+        b2init = xavier_initializer(b2shape)
+
+        with tf.variable_scope("Layer"):
+            self.W = tf.get_variable("weights",
+                                     dtype='float32',
+                                     initializer=Winit)
+            self.b1 = tf.get_variable("bias",
+                                      dtype='float32',
+                                      initializer=b1init)
+            linear_op = tf.matmul(window, self.W) + self.b1
+            first_output = tf.nn.dropout(tf.tanh(linear_op),
+                                         self.config.dropout,
+                                         name="output")
+            tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.W, 2)))
+        with tf.variable_scope("Softmax"):
+            self.U = tf.get_variable("weights",
+                                     dtype='float32',
+                                     initializer=Uinit)
+            self.b2 = tf.get_variable("bias",
+                                      dtype='float32',
+                                      initializer=b2init)
+            output = tf.nn.dropout(tf.matmul(first_output, self.U) + self.b2,
+                                   self.config.dropout,
+                                   name="output")
+            tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.U, 2)))
+        # END YOUR CODE
+        return output
+        
+  def add_loss_op(self, y):
+            # ## YOUR CODE HERE
+        pred = self.labels_placeholder
+        cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y, pred))
+        regularization = self.config.l2*0.5*sum(tf.get_collection("reg"))
+        loss = cross_entropy + regularization
+        # ## END YOUR CODE
+        return loss
+        
+  def add_training_op(self, loss):
+     
+        # ## YOUR CODE HERE
+        optimizer = tf.train.AdamOptimizer(self.config.lr)
+        train_op = optimizer.minimize(loss)
+        # ## END YOUR CODE
+        return train_op
+\end{minted}
+
+After some experiments(some related plots can be seen in Figure \ref{NER_e}) we choose the following hyper parameters: $ batch\_size=84, dropout=0.991323729933, lr=0.00365884577219, l2=1.7095245617e-05$. This choice yields val\_loss = $0.156871527433$.
+
+\begin{figure}[H] 
+  \begin{subfigure}[b]{0.5\linewidth}
+    \centering
+    \includegraphics[width=1.05\linewidth]{NER_batch_loss.png} 
+    \caption{Validation loss vs batch size} 
+    \label{ner_batch} 
+    \vspace{4ex}
+  \end{subfigure}%% 
+  \begin{subfigure}[b]{0.5\linewidth}
+    \centering
+    \includegraphics[width=1.05\linewidth]{NER_dropout.png} 
+    \caption{Validation loss vs dropout} 
+    \label{ner_dropout} 
+    \vspace{4ex}
+  \end{subfigure} 
+  \begin{subfigure}[b]{0.5\linewidth}
+    \centering
+    \includegraphics[width=1.05\linewidth]{NER_lr.png} 
+    \caption{validation loss vs learning rate} 
+    \label{ner_lr} 
+  \end{subfigure}%%
+  \begin{subfigure}[b]{0.5\linewidth}
+    \centering
+    \includegraphics[width=1.05\linewidth]{NER_reg.png} 
+    \caption{validation loss vs regularization} 
+    \label{ner_reg} 
+  \end{subfigure} 
+  \caption{Experiments with the NER window model}
+  \label{NER_e} 
+\end{figure}
+
+\section{3} We will use a \textbf{recurrent neural network (RNN)} to build a language model. Given words $x_{1}, \dots ,x_{n-1}$ a language model predicts the following word $x_{n}$ by modeling:
+\[
+P(x_{n} = v_{j} | x_{1}, \dots ,x_{n-1})
+\]
+
+where $v_{j}$ is a word in the vocabulary. The model can be described as $n-1$ feed-forward neural networks, say $NN^{(1)}, \dots,NN^{(n-1)} $ such that each $NN^{(t)}$ uses an vector from $NN^{(t-1)}$ to perform the computation on its hidden layer. Since the model is the same, we can describe each $NN^{(t)}$ as a time step. Figure \ref{RNN_re} introduces the main idea:     
+
+\begin{figure}[H] 
+\begin{center}
+\includegraphics[scale=0.85]{RNN_ball.pdf}
+\end{center}
+\caption{RNN representation}
+\label{RNN_re}
+\end{figure}
+
+Since $h^{(n-1)}$ is a function of $h^{(0)},h^{(1)}, \dots, h^{(n-2)}$ we can interpret that at the time step $n-1$ the model $NN^{(n-1)}$ has the "history" of the words $x^{(1)}, x^{(2)}, \dots, x^{(n-2)}$.  
 
 
 \end{document}
