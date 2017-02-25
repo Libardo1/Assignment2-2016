@@ -18,21 +18,32 @@ from model import LanguageModel
 # http://arxiv.org/pdf/1409.2329v4.pdf shows parameters that would achieve near
 # SotA numbers
 
-class Config(object):
-  """Holds model hyperparams and data information.
 
-  The config class is used to store various hyperparameters and dataset
-  information parameters. Model objects are passed a Config() object at
-  instantiation.
-  """
-  batch_size = 64
-  embed_size = 50
-  hidden_size = 100
-  num_steps = 10
-  max_epochs = 16
-  early_stopping = 2
-  dropout = 0.9
-  lr = 0.001
+class Config(object):
+    """Holds model hyperparams and data information.
+
+    The config class is used to store various hyperparameters and dataset
+    information parameters. Model objects are passed a Config() object at
+    instantiation.
+    """
+    def __init__(self,
+                 embed_size=50,
+                 batch_size=64,
+                 num_steps=10,
+                 hidden_size=100,
+                 max_epochs=16,
+                 early_stopping=2,
+                 dropout=0.9,
+                 lr=0.001):
+        self.embed_size = embed_size
+        self.batch_size = batch_size
+        self.num_steps = num_steps
+        self.hidden_size = hidden_size
+        self.max_epochs = max_epochs
+        self.early_stopping = early_stopping
+        self.dropout = dropout
+        self.lr = lr
+
 
 class RNNLM_Model(LanguageModel):
 
@@ -114,15 +125,15 @@ class RNNLM_Model(LanguageModel):
     # The embedding lookup is currently only implemented for the CPU
     with tf.device('/cpu:0'):
       ### YOUR CODE HERE
-      Lshape = [len(self.vocab), self.config.embed_size]
+      Lshape = (len(self.vocab), self.config.embed_size)
       xavier_initializer = xavier_weight_init()
       Linit = xavier_initializer(Lshape)
       L = tf.get_variable("L",
                           dtype='float32',
                           initializer=Linit)
       look = tf.nn.embedding_lookup(L, self.input_placeholder)
-      split = tf.split(1, self.num_steps, look)
-      split = [tf.squeeze(tensor) for tensor in split]
+      split = tf.split(1, self.config.num_steps, look)
+      inputs = [tf.squeeze(tensor, squeeze_dims=[1]) for tensor in split]
       ### END YOUR CODE
       return inputs
 
@@ -133,27 +144,68 @@ class RNNLM_Model(LanguageModel):
     over the vocabulary.
 
     Hint: Here are the dimensions of the variables you will need to
-          create 
-          
+          create
+
           U:   (hidden_size, len(vocab))
           b_2: (len(vocab),)
 
     Args:
       rnn_outputs: List of length num_steps, each of whose elements should be
-                   a tensor of shape (batch_size, embed_size).
+                   a tensor of shape (batch_size, hidden_size).
     Returns:
       outputs: List of length num_steps, each a tensor of shape
                (batch_size, len(vocab)
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    Ushape = (self.config.hidden_size, len(self.vocab))
+    b2shape = (1, len(self.vocab))
+
+    # initializers
+    xavier_initializer = xavier_weight_init()
+    Uinit = xavier_initializer(Ushape)
+    b2init = xavier_initializer(b2shape)
+
+    with tf.variable_scope("Projection_layer"):
+      self.U = tf.get_variable("weights",
+                               dtype='float32',
+                               initializer=Uinit)
+      self.b2 = tf.get_variable("bias",
+                                dtype='float32',
+                                initializer=b2init)
+      outputs = [tf.matmul(tensor, self.U) + self.b2 for tensor in rnn_outputs]
+      # tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.U, 2)))
     ### END YOUR CODE
     return outputs
 
   def add_loss_op(self, output):
     """Adds loss ops to the computational graph.
 
-    Hint: Use tensorflow.python.ops.seq2seq.sequence_loss to implement sequence loss. 
+    Hint: Use tensorflow.python.ops.seq2seq.sequence_loss to implement sequence loss.
+    Signature: sequence_loss(logits,
+                             targets,
+                             weights,
+                             average_across_timesteps=True,
+                             average_across_batch=True,
+                             softmax_loss_function=None,
+                             name=None)
+
+
+    Docstring:
+    Weighted cross-entropy loss for a sequence of logits, batch-collapsed.
+
+    Args:
+    logits: List of 2D Tensors of shape [batch_size x num_decoder_symbols].
+    targets: List of 1D batch-sized int32 Tensors of the same length as logits.
+    weights: List of 1D batch-sized float-Tensors of the same length as logits.
+    average_across_timesteps: If set, divide the returned cost by the total
+      label weight.
+    average_across_batch: If set, divide the returned cost by the batch size.
+    softmax_loss_function: Function (inputs-batch, labels-batch) -> loss-batch
+      to be used instead of the standard softmax (the default if this is None).
+    name: Optional name for this operation, defaults to "sequence_loss".
+
+    Returns:
+      A scalar float Tensor: The average log-perplexity per symbol (weighted).
 
     Args:
       output: A tensor of shape (None, self.vocab)
@@ -161,7 +213,11 @@ class RNNLM_Model(LanguageModel):
       loss: A 0-d tensor (scalar)
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+
+    loss = sequence_loss([output],
+                         [tf.reshape(self.labels_placeholder,
+                         [self.config.batch_size * self.config.num_steps, -1])],
+                         [tf.constant(1.0)])
     ### END YOUR CODE
     return loss
 
@@ -170,7 +226,7 @@ class RNNLM_Model(LanguageModel):
 
     Creates an optimizer and applies the gradients to all trainable variables.
     The Op returned by this function is what must be passed to the
-    `sess.run()` call to cause the model to train. See 
+    `sess.run()` call to cause the model to train. See
 
     https://www.tensorflow.org/versions/r0.7/api_docs/python/train.html#Optimizer
 
@@ -185,18 +241,19 @@ class RNNLM_Model(LanguageModel):
       train_op: The Op for training.
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    optimizer = tf.train.AdamOptimizer(self.config.lr)
+    train_op = optimizer.minimize(loss)
     ### END YOUR CODE
     return train_op
-  
-  def __init__(self, config):
+
+  def __init__(self, config, debug=False):
     self.config = config
-    self.load_data(debug=False)
+    self.load_data(debug)
     self.add_placeholders()
     self.inputs = self.add_embedding()
     self.rnn_outputs = self.add_model(self.inputs)
     self.outputs = self.add_projection(self.rnn_outputs)
-  
+
     # We want to check how well we correctly predict the next word
     # We cast o to float64 as there are numerical issues at hand
     # (i.e. sum(output of softmax) = 1.00000298179 and not 1)
@@ -219,7 +276,7 @@ class RNNLM_Model(LanguageModel):
           initial state for the RNN. Add this to self as instance variable
 
           self.initial_state
-  
+
           (Don't change variable name)
     Hint: Add the last RNN output to self as instance variable
 
@@ -234,8 +291,8 @@ class RNNLM_Model(LanguageModel):
           this for iteration 0 though or nothing will be initialized!)
     Hint: Here are the dimensions of the various variables you will need to
           create:
-      
-          H: (hidden_size, hidden_size) 
+
+          H: (hidden_size, hidden_size)
           I: (embed_size, hidden_size)
           b_1: (hidden_size,)
 
@@ -243,12 +300,50 @@ class RNNLM_Model(LanguageModel):
       inputs: List of length num_steps, each of whose elements should be
               a tensor of shape (batch_size, embed_size).
     Returns:
-      outputs: List of length num_steps, each of whose elements should be
+      rnn_outputs: List of length num_steps, each of whose elements should be
                a tensor of shape (batch_size, hidden_size)
     """
-    ### YOUR CODE HERE
-    raise NotImplementedError
-    ### END YOUR CODE
+    # ## YOUR CODE HERE
+    rnn_outputs = []
+    self.initial_state = tf.constant(np.zeros((self.config.batch_size,
+                                               self.config.hidden_size)))
+    # shapes
+    Hshape = (self.config.hidden_size, self.config.hidden_size)
+    Ishape = (self.config.embed_size, self.config.hidden_size)
+    b1shape = (1, self.config.hidden_size)
+
+    # initializers
+    xavier_initializer = xavier_weight_init()
+    Hinit = xavier_initializer(Hshape, dt=tf.float64)
+    Iinit = xavier_initializer(Ishape, dt=tf.float64)
+    b1init = xavier_initializer(b1shape, dt=tf.float64)
+
+    with tf.variable_scope("RNN"):
+      self.H = tf.get_variable("hidden_weights",
+                               dtype='float64',
+                               initializer=Hinit)
+      self.I = tf.get_variable("input_weights",
+                               dtype='float64',
+                               initializer=Iinit)
+      self.b1 = tf.get_variable("bias",
+                                dtype='float64',
+                                initializer=b1init)
+
+    previous_h = self.initial_state
+
+    for i, tensor in enumerate(inputs):
+      with tf.variable_scope("RNN", reuse=True):
+        drop_tensor = tf.nn.dropout(tensor, self.config.dropout)
+        h = tf.sigmoid(tf.matmul(previous_h, self.H) + (tf.matmul(drop_tensor, self.I) + self.b1))
+        h = tf.nn.dropout(h, self.config.dropout)
+        rnn_outputs.append(h)
+        previous_h = h
+        if i == (len(inputs)-1):
+          self.final_state = h
+
+    # tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.H, 2)))
+    # tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.I, 2)))
+    # ## END YOUR CODE
     return rnn_outputs
 
 
@@ -305,7 +400,11 @@ def generate_text(session, model, config, starting_text='<eos>',
   tokens = [model.vocab.encode(word) for word in starting_text.split()]
   for i in xrange(stop_length):
     ### YOUR CODE HERE
-    raise NotImplementedError
+    feed = {self.input_placeholder: tokens[i],
+            self.initial_state: state,
+            self.dropout_placeholder: 1}
+    state, y_pred = session.run([self.final_state, self.predictions[-1]],
+                                feed_dict=feed)
     ### END YOUR CODE
     next_word_idx = sample(y_pred[0], temperature=temp)
     tokens.append(next_word_idx)
@@ -318,14 +417,17 @@ def generate_sentence(session, model, config, *args, **kwargs):
   """Convenice to generate a sentence from the model."""
   return generate_text(session, model, config, *args, stop_tokens=['<eos>'], **kwargs)
 
-def test_RNNLM():
-  config = Config()
+def test_RNNLM(debug=False):
+  if debug:
+    config = Config(max_epochs=1)
+  else:
+    config = Config()
   gen_config = deepcopy(config)
   gen_config.batch_size = gen_config.num_steps = 1
 
   # We create the training model and generative model
   with tf.variable_scope('RNNLM') as scope:
-    model = RNNLM_Model(config)
+    model = RNNLM_Model(config, debug)
     # This instructs gen_model to reuse the same variables as the model above
     scope.reuse_variables()
     gen_model = RNNLM_Model(gen_config)
@@ -336,7 +438,7 @@ def test_RNNLM():
   with tf.Session() as session:
     best_val_pp = float('inf')
     best_val_epoch = 0
-  
+
     session.run(init)
     for epoch in xrange(config.max_epochs):
       print 'Epoch {}'.format(epoch)
@@ -355,7 +457,7 @@ def test_RNNLM():
       if epoch - best_val_epoch > config.early_stopping:
         break
       print 'Total time: {}'.format(time.time() - start)
-      
+   
     saver.restore(session, 'ptb_rnnlm.weights')
     test_pp = model.run_epoch(session, model.encoded_test)
     print '=-=' * 5
@@ -368,4 +470,5 @@ def test_RNNLM():
       starting_text = raw_input('> ')
 
 if __name__ == "__main__":
-    test_RNNLM()
+    debug = True
+    test_RNNLM(debug)

@@ -14,7 +14,7 @@ def xavier_weight_init():
 
     Hint: You might find tf.random_uniform useful.
     """
-    def _xavier_initializer(shape, **kwargs):
+    def _xavier_initializer(shape, dt=tf.float32, **kwargs):
         """Defines an initializer for the Xavier distribution.
 
         This function will be used as a variable scope initializer.
@@ -32,7 +32,7 @@ def xavier_weight_init():
         out = tf.random_uniform(shape,
                                 minval=-epsilon,
                                 maxval=epsilon,
-                                dtype=tf.float32,
+                                dtype=dt,
                                 name='weights')
         # ## END YOUR CODE
         return out
