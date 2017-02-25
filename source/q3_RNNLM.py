@@ -5,6 +5,8 @@ import time
 import numpy as np
 from copy import deepcopy
 
+from q2_initialization import xavier_weight_init
+
 from utils import calculate_perplexity, get_ptb_dataset, Vocab
 from utils import ptb_iterator, sample
 
@@ -79,7 +81,17 @@ class RNNLM_Model(LanguageModel):
     (Don't change the variable names)
     """
     ### YOUR CODE HERE
-    raise NotImplementedError
+    self.input_placeholder = tf.placeholder(tf.int32,
+                                            shape=[None,
+                                                   self.config.num_steps],
+                                            name="input_placeholder")
+    self.labels_placeholder = tf.placeholder(tf.float32,
+                                             shape=[None,
+                                                    self.config.num_steps],
+                                             name="labels_placeholder")
+    self.dropout_placeholder = tf.placeholder(tf.float32,
+                                              shape=[],
+                                              name="dropout_value")
     ### END YOUR CODE
   
   def add_embedding(self):
@@ -92,6 +104,7 @@ class RNNLM_Model(LanguageModel):
     Hint: Check the last slide from the TensorFlow lecture.
     Hint: Here are the dimensions of the variables you will need to create:
 
+
       L: (len(self.vocab), embed_size)
 
     Returns:
@@ -101,7 +114,15 @@ class RNNLM_Model(LanguageModel):
     # The embedding lookup is currently only implemented for the CPU
     with tf.device('/cpu:0'):
       ### YOUR CODE HERE
-      raise NotImplementedError
+      Lshape = [len(self.vocab), self.config.embed_size]
+      xavier_initializer = xavier_weight_init()
+      Linit = xavier_initializer(Lshape)
+      L = tf.get_variable("L",
+                          dtype='float32',
+                          initializer=Linit)
+      look = tf.nn.embedding_lookup(L, self.input_placeholder)
+      split = tf.split(1, self.num_steps, look)
+      split = [tf.squeeze(tensor) for tensor in split]
       ### END YOUR CODE
       return inputs
 

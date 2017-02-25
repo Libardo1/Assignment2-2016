@@ -482,6 +482,6 @@ def test_NER(config, save=True, verbose=True, debug=False):
 
 if __name__ == "__main__":
     config = Config()
-    val_loss, duration = test_NER(config, debug=True)
+    val_loss, duration = test_NER(config, debug=False)
     print("The best val_loss is {0} and the whole training takes {1}(s)".format(val_loss,
                                                                duration))
