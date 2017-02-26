@@ -16,6 +16,8 @@ from model import LanguageModel
 # http://arxiv.org/pdf/1409.2329v4.pdf shows parameters that would achieve near
 # SotA numbers
 
+best_val_so_far = 190.415115356
+
 
 class Config(object):
     """Holds model hyperparams and data information.
@@ -77,19 +79,19 @@ class RNNLM_Model(LanguageModel):
     input_placeholder: Input placeholder tensor of shape
                        (None, num_steps), type tf.int32
     labels_placeholder: Labels placeholder tensor of shape
-                        (None, num_steps), type tf.float32
+                        (None, num_steps), type tf.float32 *****int64
     dropout_placeholder: Dropout value placeholder (scalar),
                          type tf.float32
 
     Add these placeholders to self as the instance variables
-  
+
       self.input_placeholder
       self.labels_placeholder
       self.dropout_placeholder
 
     (Don't change the variable names)
     """
-    ### YOUR CODE HERE
+    # ## YOUR CODE HERE
     self.input_placeholder = tf.placeholder(tf.int32,
                                             shape=[None,
                                                    self.config.num_steps],
@@ -101,8 +103,8 @@ class RNNLM_Model(LanguageModel):
     self.dropout_placeholder = tf.placeholder(tf.float32,
                                               shape=[],
                                               name="dropout_value")
-    ### END YOUR CODE
-  
+    # ## END YOUR CODE
+
   def add_embedding(self):
     """Add embedding layer.
 
@@ -160,7 +162,7 @@ class RNNLM_Model(LanguageModel):
       self.U = tf.get_variable("weights", shape=Ushape)
       self.b2 = tf.get_variable("bias", shape=b2shape)
       outputs = [tf.matmul(tensor, self.U) + self.b2 for tensor in rnn_outputs]
-      # tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.U, 2)))
+
     ### END YOUR CODE
     return outputs
 
@@ -292,20 +294,6 @@ class RNNLM_Model(LanguageModel):
     """
     # ## YOUR CODE HERE
 
-    # self.H = tf.get_variable("H", [self.config.hidden_size, self.config.hidden_size])
-    # self.I = tf.get_variable("I", [self.config.embed_size, self.config.hidden_size])
-    # self.b_1 = tf.get_variable("b_1", [self.config.hidden_size])
-    # self.initial_state = tf.zeros((self.config.batch_size, self.config.hidden_size))
-    # state = self.initial_state
-    # rnn_outputs = []
-    # for time_step in xrange(self.config.num_steps):
-    #   state = tf.nn.sigmoid(tf.matmul(state, self.H) + tf.matmul(inputs[time_step], self.I) + self.b_1)
-    #   rnn_outputs.append(state)
-    # self.final_state = state
-    # return rnn_outputs
-
-
-
     rnn_outputs = []
 
     # shapes
@@ -393,10 +381,10 @@ def generate_text(session, model, config, starting_text='<eos>',
   tokens = [model.vocab.encode(word) for word in starting_text.split()]
   for i in xrange(stop_length):
     ### YOUR CODE HERE
-    feed = {self.input_placeholder: tokens[i],
-            self.initial_state: state,
-            self.dropout_placeholder: 1}
-    state, y_pred = session.run([self.final_state, self.predictions[-1]],
+    feed = {model.input_placeholder: [[tokens[-1]]],
+            model.initial_state: state,
+            model.dropout_placeholder: 1.0}
+    state, y_pred = session.run([model.final_state, model.predictions[-1]],
                                 feed_dict=feed)
     ### END YOUR CODE
     next_word_idx = sample(y_pred[0], temperature=temp)
@@ -412,7 +400,7 @@ def generate_sentence(session, model, config, *args, **kwargs):
 
 def test_RNNLM(debug=False):
   if debug:
-    config = Config(max_epochs=1)
+    config = Config(max_epochs=3)
   else:
     config = Config()
   gen_config = deepcopy(config)
@@ -452,7 +440,7 @@ def test_RNNLM(debug=False):
         break
       print 'Total time: {}'.format(time.time() - start)
    
-    saver.restore(session, 'ptb_rnnlm.weights')
+    saver.restore(session, './ptb_rnnlm.weights')
     test_pp = model.run_epoch(session, model.encoded_test)
     print '=-=' * 5
     print 'Test perplexity: {}'.format(test_pp)
@@ -464,5 +452,5 @@ def test_RNNLM(debug=False):
       starting_text = raw_input('> ')
 
 if __name__ == "__main__":
-    debug = True
+    debug = False
     test_RNNLM(debug)
