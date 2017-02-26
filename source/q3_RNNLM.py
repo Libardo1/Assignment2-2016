@@ -5,8 +5,6 @@ import time
 import numpy as np
 from copy import deepcopy
 
-from q2_initialization import xavier_weight_init
-
 from utils import calculate_perplexity, get_ptb_dataset, Vocab
 from utils import ptb_iterator, sample
 
@@ -96,7 +94,7 @@ class RNNLM_Model(LanguageModel):
                                             shape=[None,
                                                    self.config.num_steps],
                                             name="input_placeholder")
-    self.labels_placeholder = tf.placeholder(tf.float32,
+    self.labels_placeholder = tf.placeholder(tf.int64,
                                              shape=[None,
                                                     self.config.num_steps],
                                              name="labels_placeholder")
@@ -126,11 +124,7 @@ class RNNLM_Model(LanguageModel):
     with tf.device('/cpu:0'):
       ### YOUR CODE HERE
       Lshape = (len(self.vocab), self.config.embed_size)
-      xavier_initializer = xavier_weight_init()
-      Linit = xavier_initializer(Lshape)
-      L = tf.get_variable("L",
-                          dtype='float32',
-                          initializer=Linit)
+      L = tf.get_variable("L", shape=Lshape)
       look = tf.nn.embedding_lookup(L, self.input_placeholder)
       split = tf.split(1, self.config.num_steps, look)
       inputs = [tf.squeeze(tensor, squeeze_dims=[1]) for tensor in split]
@@ -157,21 +151,14 @@ class RNNLM_Model(LanguageModel):
                (batch_size, len(vocab)
     """
     ### YOUR CODE HERE
+
+    # shapes
     Ushape = (self.config.hidden_size, len(self.vocab))
     b2shape = (1, len(self.vocab))
 
-    # initializers
-    xavier_initializer = xavier_weight_init()
-    Uinit = xavier_initializer(Ushape)
-    b2init = xavier_initializer(b2shape)
-
     with tf.variable_scope("Projection_layer"):
-      self.U = tf.get_variable("weights",
-                               dtype='float32',
-                               initializer=Uinit)
-      self.b2 = tf.get_variable("bias",
-                                dtype='float32',
-                                initializer=b2init)
+      self.U = tf.get_variable("weights", shape=Ushape)
+      self.b2 = tf.get_variable("bias", shape=b2shape)
       outputs = [tf.matmul(tensor, self.U) + self.b2 for tensor in rnn_outputs]
       # tf.add_to_collection("reg", tf.reduce_sum(tf.pow(self.U, 2)))
     ### END YOUR CODE
@@ -304,30 +291,36 @@ class RNNLM_Model(LanguageModel):
                a tensor of shape (batch_size, hidden_size)
     """
     # ## YOUR CODE HERE
+
+    # self.H = tf.get_variable("H", [self.config.hidden_size, self.config.hidden_size])
+    # self.I = tf.get_variable("I", [self.config.embed_size, self.config.hidden_size])
+    # self.b_1 = tf.get_variable("b_1", [self.config.hidden_size])
+    # self.initial_state = tf.zeros((self.config.batch_size, self.config.hidden_size))
+    # state = self.initial_state
+    # rnn_outputs = []
+    # for time_step in xrange(self.config.num_steps):
+    #   state = tf.nn.sigmoid(tf.matmul(state, self.H) + tf.matmul(inputs[time_step], self.I) + self.b_1)
+    #   rnn_outputs.append(state)
+    # self.final_state = state
+    # return rnn_outputs
+
+
+
     rnn_outputs = []
-    self.initial_state = tf.constant(np.zeros((self.config.batch_size,
-                                               self.config.hidden_size)))
+
     # shapes
+    initialshape = (self.config.batch_size, self.config.hidden_size)
     Hshape = (self.config.hidden_size, self.config.hidden_size)
     Ishape = (self.config.embed_size, self.config.hidden_size)
     b1shape = (1, self.config.hidden_size)
 
     # initializers
-    xavier_initializer = xavier_weight_init()
-    Hinit = xavier_initializer(Hshape, dt=tf.float64)
-    Iinit = xavier_initializer(Ishape, dt=tf.float64)
-    b1init = xavier_initializer(b1shape, dt=tf.float64)
+    self.initial_state = tf.zeros(initialshape)
 
     with tf.variable_scope("RNN"):
-      self.H = tf.get_variable("hidden_weights",
-                               dtype='float64',
-                               initializer=Hinit)
-      self.I = tf.get_variable("input_weights",
-                               dtype='float64',
-                               initializer=Iinit)
-      self.b1 = tf.get_variable("bias",
-                                dtype='float64',
-                                initializer=b1init)
+      self.H = tf.get_variable("hidden_weights", shape=Hshape)
+      self.I = tf.get_variable("input_weights", shape=Ishape)
+      self.b1 = tf.get_variable("bias", shape=b1shape)
 
     previous_h = self.initial_state
 
@@ -432,7 +425,8 @@ def test_RNNLM(debug=False):
     scope.reuse_variables()
     gen_model = RNNLM_Model(gen_config)
 
-  init = tf.initialize_all_variables()
+  # init = tf.initialize_all_variables()
+  init = tf.global_variables_initializer()
   saver = tf.train.Saver()
 
   with tf.Session() as session:
