@@ -162,7 +162,8 @@ class RNNLM_Model(LanguageModel):
         with tf.variable_scope("Projection_layer"):
             self.U = tf.get_variable("weights", shape=Ushape)
             self.b2 = tf.get_variable("bias", shape=b2shape)
-            outputs = [tf.matmul(tensor, self.U) + self.b2
+            outputs = [tf.nn.dropout((tf.matmul(tensor, self.U) + self.b2),
+                                     self.config.dropout)
                        for tensor in rnn_outputs]
 
         # ## END YOUR CODE
@@ -328,7 +329,6 @@ class RNNLM_Model(LanguageModel):
                 drop_tensor = tf.nn.dropout(tensor, self.config.dropout)
                 h = tf.sigmoid(tf.matmul(previous_h, self.H) +
                                (tf.matmul(drop_tensor, self.I) + self.b1))
-                h = tf.nn.dropout(h, self.config.dropout)
                 rnn_outputs.append(h)
                 previous_h = h
                 if i == (len(inputs)-1):
@@ -419,19 +419,20 @@ def generate_sentence(session, model, config, *args, **kwargs):
                          **kwargs)
 
 
-def test_RNNLM(config, debug=False):
+def test_RNNLM(config, save=True, debug=False):
     if debug:
         config = Config(max_epochs=1)
     gen_config = deepcopy(config)
     gen_config.batch_size = gen_config.num_steps = 1
+    inital_time = time.time()
 
     # We create the training model and generative model
     with tf.variable_scope('RNNLM') as scope:
         model = RNNLM_Model(config, debug)
         # This instructs gen_model to reuse the same variables as the
         # model above
-        scope.reuse_variables()
-        gen_model = RNNLM_Model(gen_config)
+        # scope.reuse_variables()
+        # gen_model = RNNLM_Model(gen_config)
 
     # init = tf.initialize_all_variables()
     init = tf.global_variables_initializer()
@@ -455,26 +456,20 @@ def test_RNNLM(config, debug=False):
             if valid_pp < best_val_pp:
                 best_val_pp = valid_pp
                 best_val_epoch = epoch
-                saver.save(session, './ptb_rnnlm.weights')
+                if save:
+                    saver.save(session, './ptb_rnnlm.weights')
             if epoch - best_val_epoch > config.early_stopping:
                 break
             print('Total time: {}'.format(time.time() - start))
 
-        saver.restore(session, './ptb_rnnlm.weights')
-        test_pp = model.run_epoch(session, model.encoded_test)
-        print('=-=' * 5)
-        print('Test perplexity: {}'.format(test_pp))
-        print('=-=' * 5)
-        starting_text = 'in palo alto'
-        while starting_text:
-            print(' '.join(generate_sentence(session,
-                                             gen_model,
-                                             gen_config,
-                                             starting_text=starting_text,
-                                             temp=1.0)))
-            starting_text = raw_input('> ')
+    duration = (time.time() - inital_time)
+    return best_val_pp, duration
+
 
 if __name__ == "__main__":
-    debug = False
     config = Config()
-    test_RNNLM(config, debug)
+    debug = False
+    save = True
+    val_pp, duration = test_RNNLM(config, save, debug)
+    print("""The best validation perplexity is {0} and the whole
+      training takes {1}(s)""".format(val_pp, duration))
