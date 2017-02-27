@@ -21,7 +21,7 @@ parser.add_argument("-p",
 
 args = parser.parse_args()
 
-BATCH = [14, 24, 34, 44, 54, 64, 74, 84, 94, 104]
+BATCH = [64, 74, 84, 94, 104, 114, 124]
 number_of_exp = len(BATCH)
 results = []
 times = []
