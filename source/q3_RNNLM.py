@@ -461,14 +461,14 @@ def test_RNNLM(config, save=True, debug=False):
             if epoch - best_val_epoch > config.early_stopping:
                 break
             print('Total time: {}'.format(time.time() - start))
-
+    tf.reset_default_graph()
     duration = (time.time() - inital_time)
     return best_val_pp, duration
 
 
 if __name__ == "__main__":
     config = Config()
-    debug = False
+    debug = True
     save = True
     val_pp, duration = test_RNNLM(config, save, debug)
     print("""The best validation perplexity is {0} and the whole

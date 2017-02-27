@@ -1,11 +1,5 @@
-import os
-import getpass
-import sys
-import time
-
 import numpy as np
-import tensorflow as tf
-from q2_NER import NERModel, test_NER, Config
+from q2_NER import test_NER, Config
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -43,4 +37,3 @@ plt.plot(DROPOUT, results)
 plt.xlabel("dropout")
 plt.ylabel("loss")
 plt.savefig("NER_dropout.png")
-plt.show()
