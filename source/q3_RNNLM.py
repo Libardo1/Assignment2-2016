@@ -16,7 +16,7 @@ from model import LanguageModel
 # http://arxiv.org/pdf/1409.2329v4.pdf shows parameters that would achieve near
 # SotA numbers
 
-best_val_so_far = 190.415115356
+# best_val_so_far = 190.415115356
 
 
 class Config(object):
@@ -28,7 +28,7 @@ class Config(object):
     """
     def __init__(self,
                  embed_size=50,
-                 batch_size=104,
+                 batch_size=64,
                  num_steps=10,
                  hidden_size=100,
                  max_epochs=16,
@@ -419,7 +419,7 @@ def generate_sentence(session, model, config, *args, **kwargs):
                          **kwargs)
 
 
-def test_RNNLM(config, save=True, debug=False):
+def test_RNNLM(config, save=True, debug=False, generate=False):
     if debug:
         config = Config(max_epochs=1)
     gen_config = deepcopy(config)
@@ -431,8 +431,8 @@ def test_RNNLM(config, save=True, debug=False):
         model = RNNLM_Model(config, debug)
         # This instructs gen_model to reuse the same variables as the
         # model above
-        # scope.reuse_variables()
-        # gen_model = RNNLM_Model(gen_config)
+        scope.reuse_variables()
+        gen_model = RNNLM_Model(gen_config)
 
     # init = tf.initialize_all_variables()
     init = tf.global_variables_initializer()
@@ -461,6 +461,25 @@ def test_RNNLM(config, save=True, debug=False):
             if epoch - best_val_epoch > config.early_stopping:
                 break
             print('Total time: {}'.format(time.time() - start))
+        if generate:
+            saver.restore(session, './ptb_rnnlm.weights')
+            test_pp = model.run_epoch(session, model.encoded_test)
+            print('=-=' * 5)
+            print('Test perplexity: {}'.format(test_pp))
+            print('=-=' * 5)
+            print(' ')
+            print('=-=' * 5)
+            print("Sentence generator\nType '*end*' to break the loop")
+            print('=-=' * 5)
+            starting_text = 'in palo alto'
+            while starting_text != "*end*":
+                print(' '.join(generate_sentence(session,
+                                                 gen_model,
+                                                 gen_config,
+                                                 starting_text=starting_text,
+                                                 temp=1.0)))
+                starting_text = raw_input('> ')
+
     tf.reset_default_graph()
     duration = (time.time() - inital_time)
     return best_val_pp, duration
@@ -470,6 +489,7 @@ if __name__ == "__main__":
     config = Config()
     debug = False
     save = True
-    val_pp, duration = test_RNNLM(config, save, debug)
-    print("""The best validation perplexity is {0} and the whole
+    generate = True
+    val_pp, duration = test_RNNLM(config, save, debug, generate)
+    print("""\nThe best validation perplexity is {0} and the whole
       training takes {1}(s)""".format(val_pp, duration))
