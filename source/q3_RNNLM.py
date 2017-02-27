@@ -162,8 +162,7 @@ class RNNLM_Model(LanguageModel):
         with tf.variable_scope("Projection_layer"):
             self.U = tf.get_variable("weights", shape=Ushape)
             self.b2 = tf.get_variable("bias", shape=b2shape)
-            outputs = [tf.nn.dropout((tf.matmul(tensor, self.U) + self.b2),
-                                     self.config.dropout)
+            outputs = [tf.matmul(tensor, self.U) + self.b2
                        for tensor in rnn_outputs]
 
         # ## END YOUR CODE
@@ -329,6 +328,7 @@ class RNNLM_Model(LanguageModel):
                 drop_tensor = tf.nn.dropout(tensor, self.config.dropout)
                 h = tf.sigmoid(tf.matmul(previous_h, self.H) +
                                (tf.matmul(drop_tensor, self.I) + self.b1))
+                h = tf.nn.dropout(h, self.config.dropout)
                 rnn_outputs.append(h)
                 previous_h = h
                 if i == (len(inputs)-1):
@@ -468,7 +468,7 @@ def test_RNNLM(config, save=True, debug=False):
 
 if __name__ == "__main__":
     config = Config()
-    debug = True
+    debug = False
     save = True
     val_pp, duration = test_RNNLM(config, save, debug)
     print("""The best validation perplexity is {0} and the whole
