@@ -16,7 +16,7 @@ from model import LanguageModel
 # http://arxiv.org/pdf/1409.2329v4.pdf shows parameters that would achieve near
 # SotA numbers
 
-# best_val_so_far = 190.415115356
+# best_val_so_far = 186.618484497
 
 
 class Config(object):
@@ -33,8 +33,8 @@ class Config(object):
                  hidden_size=100,
                  max_epochs=16,
                  early_stopping=2,
-                 dropout=0.9,
-                 lr=0.001):
+                 dropout=0.991323729933,
+                 lr=0.00217346380124):
         self.embed_size = embed_size
         self.batch_size = batch_size
         self.num_steps = num_steps
