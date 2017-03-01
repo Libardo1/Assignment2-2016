@@ -29,7 +29,7 @@ class Config(object):
     def __init__(self,
                  embed_size=50,
                  batch_size=104,
-                 num_steps=10,
+                 num_steps=14,
                  hidden_size=100,
                  max_epochs=16,
                  early_stopping=2,
