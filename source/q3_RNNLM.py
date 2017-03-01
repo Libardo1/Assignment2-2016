@@ -16,8 +16,6 @@ from model import LanguageModel
 # http://arxiv.org/pdf/1409.2329v4.pdf shows parameters that would achieve near
 # SotA numbers
 
-# best_val_so_far = 186.618484497
-
 
 class Config(object):
     """Holds model hyperparams and data information.

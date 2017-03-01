@@ -582,6 +582,24 @@ thus
 \end{equation}
 
 \textbf{3d)}
+Give $h^{(t-1)}$, in one step of forward propagation we perform 4 matrix multiplication, 3 vector sums, one application of the sigmoid function in a vector of size $D_h$ and one application of the softmax function in a vector of size $|V|$. Let $f(D_h)$ and $g(|V|)$ be the cost of sigmoid function and the softmax function in that vectors, respectively. We can then express the cost with the equation:   
+
+\begin{equation}\label{eq:52}
+O(|V|d +D_hD_h + dD_h + 2D_h + f(D_h) +D_h|V| + |V| + g(|V|))
+\end{equation}
+
+Regarding backpropagation, assuming that $h^{(t-1)}$ if fixed, for each single step we perform 4 outer products, one Hadamard product, 2 matrix multiplication and one application of $\sigma^{\prime}$ in a vector of size $D_h$ (let $f^{*}(D_h)$ be the cost of this application). Let $\alpha$ be the following sum: 
+\begin{equation}\label{eq:53}
+\alpha = 2D_h|V| +D_h + f^{*}(D_h)+ 2dD_h + 2D_hD_h
+\end{equation}
+hence, for a backpropagation for a single step we have:
+\begin{equation}\label{eq:54}
+O(\alpha)
+\end{equation}
+and for $\tau$ steps
+\begin{equation}\label{eq:55}
+O(\tau\alpha)
+\end{equation}
 
 \textbf{3e)}
 
@@ -680,7 +698,7 @@ def add_model(self, inputs):
         return rnn_outputs
 \end{minted}
 
-After some experiments we choose the following hyper parameters: $ batch\_size=104, dropout=0.991323729933, lr=0.00217346380124, num\_steps=14$. This choice yields validation perplexity = $164.519836426$. As can be seen in the plots from Figure \ref{RNN_e} we could continue searching better hyper parameters, but due the lack of time (we use CPU only) we decide to stop the search at those parameters.
+After some experiments we choose the following hyper parameters: $ batch\_size=104, dropout=0.991323729933, lr=0.00217346380124, num\_steps=14$. This choice yields validation perplexity = $163.170974731$. As can be seen in the plots from Figure \ref{RNN_e} we could continue searching better hyper parameters, but due the lack of time (we use CPU only) we decide to stop the search at those parameters.
 
 \begin{figure}[H] 
   \begin{subfigure}[b]{0.5\linewidth}
@@ -729,7 +747,14 @@ def generate_text(session, model, config, starting_text='<eos>',
                                     feed_dict=feed)
         # ## END YOUR CODE
 \end{minted}
+Examples of generated sentence:
 
+\begin{itemize}
+\item \textbf{$>$ sex is:} sex is chairman of two-year operation $<$eos$>$
 
+\item \textbf{$>$ violence is:} violence is expected well but by the german social concept of public conditions around what if the sec $<$unk$>$ with fujis at greenville odd a $<$unk$>$ formerly won away with editor of the federal court term the news spokeswoman says mr. $<$unk$>$ said the $<$unk$>$ 's is one location of the development of a new active position he says dick green louisville ky. representatives of l.j. hooker maker increased N N to N at N $<$eos$>$
+
+\item \textbf{$>$ this is a great:} this is a great japanese she had the president maker was the ceo for a time when i do n't any shared with potential but going to be hampered by the noriega is that last winter $<$eos$>$
+\end{itemize}
 
 \end{document}
