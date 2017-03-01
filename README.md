@@ -1,6 +1,6 @@
 # Assigment 2 (2016)
 
-This repository contains all my solutions for the [Assigment 2](http://cs224d.stanford.edu/assignment2/index.html) of the course CS224d: Deep Learning for Natural Language Processing (in the year 2016). All the code can be found in the source folder. A report for the written assignment is in the folder report.
+This repository contains all my solutions for the [Assigment 2](http://cs224d.stanford.edu/assignment2/index.html) of the course CS224d: Deep Learning for Natural Language Processing (from the year 2016). All the code can be found in the source folder. A report for the written assignment is in the folder report.
 
 ### Requirements
 * Numpy
