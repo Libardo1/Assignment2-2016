@@ -1,4 +1,4 @@
-from q2_NER import test_NER, Config
+from ..q2_NER import test_NER, Config
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
