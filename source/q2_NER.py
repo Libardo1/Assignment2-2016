@@ -56,11 +56,18 @@ class NERModel(LanguageModel):
         # Load the starter word vectors
         path_vocab = 'data/ner/vocab.txt'
         path_wordVectors = 'data/ner/wordVectors.txt'
+        path_train = 'data/ner/train'
+        path_dev = 'data/ner/dev'
+        path_test = 'data/ner/test.masked'
         if search:
             currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+            print("AAAAAAAAAAAA", currentdir)
             parentdir = os.path.dirname(currentdir)
             path_vocab = parentdir + "/source/" + path_vocab
             path_wordVectors = parentdir + "/source/" + path_wordVectors
+            path_train = parentdir + "/source/" + path_train
+            path_dev = parentdir + "/source/" + path_dev
+            path_test = parentdir + "/source/" + path_test
         self.wv, word_to_num, num_to_word = ner.load_wv(
           path_vocab, path_wordVectors)
         tagnames = ['O', 'LOC', 'MISC', 'ORG', 'PER']
@@ -68,7 +75,7 @@ class NERModel(LanguageModel):
         tag_to_num = {v: k for k, v in self.num_to_tag.iteritems()}
 
         # Load the training set
-        docs = du.load_dataset('data/ner/train')
+        docs = du.load_dataset(path_train)
         self.X_train, self.y_train = du.docs_to_windows(
             docs, word_to_num, tag_to_num, wsize=self.config.window_size)
         if debug:
@@ -76,7 +83,7 @@ class NERModel(LanguageModel):
             self.y_train = self.y_train[:1024]
 
         # Load the dev set (for tuning hyperparameters)
-        docs = du.load_dataset('data/ner/dev')
+        docs = du.load_dataset(path_dev)
         self.X_dev, self.y_dev = du.docs_to_windows(
             docs, word_to_num, tag_to_num, wsize=self.config.window_size)
         if debug:
@@ -84,7 +91,7 @@ class NERModel(LanguageModel):
             self.y_dev = self.y_dev[:1024]
 
         # Load the test set (dummy labels only)
-        docs = du.load_dataset('data/ner/test.masked')
+        docs = du.load_dataset(path_test)
         self.X_test, self.y_test = du.docs_to_windows(
             docs, word_to_num, tag_to_num, wsize=self.config.window_size)
 
@@ -490,6 +497,6 @@ def test_NER(config, save=True, verbose=True, debug=False, search=False):
 
 if __name__ == "__main__":
     config = Config()
-    val_loss, duration = test_NER(config, debug=False)
+    val_loss, duration = test_NER(config, debug=True)
     print("The best val_loss is {0} and the whole training takes {1}(s)".format(val_loss,
                                                                duration))
