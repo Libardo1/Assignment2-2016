@@ -19,6 +19,7 @@ class Vocab(object):
     self.word_freq[word] += count
 
   def construct(self, words):
+    print("AAAA", words)
     for word in words:
       self.add_word(word)
     self.total_words = float(sum(self.word_freq.values()))
@@ -42,13 +43,9 @@ def calculate_perplexity(log_probs):
     perp += -p
   return np.exp(perp / len(log_probs))
 
-def get_ptb_dataset(dataset='train', path=False):
-
-  fn = 'data/ptb/ptb.{}.txt'
-  if path:
-    fn = path + "/" + fn
-  print(dataset,path,fn)
-  for line in open(fn.format(dataset)):
+def get_ptb_dataset(path):
+  print(path)
+  for line in open(path):
     for word in line.split():
       yield word
     # Add token to the end of the line
