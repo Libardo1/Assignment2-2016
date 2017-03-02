@@ -54,7 +54,7 @@ class NERModel(LanguageModel):
         """Loads starter word-vectors and train/dev/test data."""
         # Load the starter word vectors
         path_vocab = 'data/ner/vocab.txt'
-        path_wordVectors = 'data/ner/vocab.txt'
+        path_wordVectors = 'data/ner/wordVectors.txt'
         if search:
             currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
             parentdir = os.path.dirname(currentdir)
