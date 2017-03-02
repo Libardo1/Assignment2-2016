@@ -29,7 +29,7 @@ class Config(object):
     """
     def __init__(self,
                  embed_size=50,
-                 batch_size=64,
+                 batch_size=104,
                  num_steps=14,
                  hidden_size=100,
                  max_epochs=16,
@@ -497,7 +497,7 @@ def test_RNNLM(config, save=True, debug=False, generate=False, search=False):
 
 if __name__ == "__main__":
     config = Config()
-    debug = True
+    debug = False
     save = True
     generate = True
     val_pp, duration = test_RNNLM(config, save, debug, generate)
