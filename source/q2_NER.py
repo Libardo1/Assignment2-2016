@@ -50,11 +50,18 @@ class NERModel(LanguageModel):
     in addition to the standard Model method.
     """
 
-    def load_data(self, debug=False):
+    def load_data(self, debug=False, search=False):
         """Loads starter word-vectors and train/dev/test data."""
         # Load the starter word vectors
+        path_vocab = 'data/ner/vocab.txt'
+        path_wordVectors = 'data/ner/vocab.txt'
+        if search:
+            currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+            parentdir = os.path.dirname(currentdir)
+            path_vocab = parentdir + "/" + path_vocab
+            path_wordVectors = parentdir + "/" + path_wordVectors
         self.wv, word_to_num, num_to_word = ner.load_wv(
-          'data/ner/vocab.txt', 'data/ner/wordVectors.txt')
+          path_vocab, path_wordVectors)
         tagnames = ['O', 'LOC', 'MISC', 'ORG', 'PER']
         self.num_to_tag = dict(enumerate(tagnames))
         tag_to_num = {v: k for k, v in self.num_to_tag.iteritems()}
@@ -303,10 +310,10 @@ class NERModel(LanguageModel):
         # ## END YOUR CODE
         return train_op
 
-    def __init__(self, config, debug=False):
+    def __init__(self, config, debug=False, search=False):
         """Constructs the network using the helper functions defined above."""
         self.config = config
-        self.load_data(debug)
+        self.load_data(debug, search)
         self.add_placeholders()
         window = self.add_embedding()
         y = self.add_model(window)
@@ -423,7 +430,7 @@ def save_predictions(predictions, filename):
             f.write(str(prediction) + "\n")
 
 
-def test_NER(config, save=True, verbose=True, debug=False):
+def test_NER(config, save=True, verbose=True, debug=False, seach=False):
     """Test NER model implementation.
     You can use this function to test your implementation of the Named Entity
     Recognition network. When debugging, set max_epochs in the Config object to
@@ -431,7 +438,7 @@ def test_NER(config, save=True, verbose=True, debug=False):
     """
     initial_time = time.time()
     with tf.Graph().as_default():
-        model = NERModel(config, debug)
+        model = NERModel(config, debug, search)
 
         init = tf.global_variables_initializer()
         saver = tf.train.Saver()

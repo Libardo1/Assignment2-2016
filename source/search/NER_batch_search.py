@@ -22,7 +22,8 @@ for batch in BATCH:
     val_loss, duration = test_NER(config,
                                   save=False,
                                   verbose=False,
-                                  debug=False)
+                                  debug=False,
+                                  search=True)
     results.append(val_loss)
     times.append(duration)
 
