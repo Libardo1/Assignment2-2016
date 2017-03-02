@@ -47,6 +47,7 @@ def get_ptb_dataset(dataset='train', path=False):
   fn = 'data/ptb/ptb.{}.txt'
   if path:
     fn = path + "/" + fn
+  print(dataset,path,fn)
   for line in open(fn.format(dataset)):
     for word in line.split():
       yield word
