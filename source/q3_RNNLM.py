@@ -50,26 +50,27 @@ class RNNLM_Model(LanguageModel):
 
     def load_data(self, debug=False):
         """Loads starter word-vectors and train/dev/test data."""
-        path_train = 'data/ptb/ptb.train.txt'
-        path_valid = 'data/ptb/ptb.valid.txt'
-        path_test = 'data/ptb/ptb.test.txt'
-        if self.search:
+        if not self.search
+        self.path_train = 'data/ptb/ptb.train.txt'
+        self.path_valid = 'data/ptb/ptb.valid.txt'
+        self.path_test = 'data/ptb/ptb.test.txt'
+        else:
           currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-          path_train = currentdir + "/" + path_train
-          path_valid = currentdir + "/" + path_valid
-          path_test = currentdir + "/" + path_test
+          self.path_train = currentdir + "/" + 'data/ptb/ptb.train.txt'
+          self.path_valid = currentdir + "/" + 'data/ptb/ptb.valid.txt'
+          self.path_test = currentdir + "/" + 'data/ptb/ptb.test.txt'
         self.vocab = Vocab()
-        print("BEFORE", path_train)
-        self.vocab.construct(get_ptb_dataset(path_train))
-        print("AFTER", path_train)
+        print("BEFORE", self.path_train)
+        self.vocab.construct(get_ptb_dataset(self.path_train))
+        print("AFTER", self.path_train)
         self.encoded_train = np.array(
-            [self.vocab.encode(word) for word in get_ptb_dataset(path_train)],
+            [self.vocab.encode(word) for word in get_ptb_dataset(self.path_train)],
             dtype=np.int32)
         self.encoded_valid = np.array(
-            [self.vocab.encode(word) for word in get_ptb_dataset(path_valid)],
+            [self.vocab.encode(word) for word in get_ptb_dataset(self.path_valid)],
             dtype=np.int32)
         self.encoded_test = np.array(
-            [self.vocab.encode(word) for word in get_ptb_dataset(path_test)],
+            [self.vocab.encode(word) for word in get_ptb_dataset(self.path_test)],
             dtype=np.int32)
         if debug:
             num_debug = 1024
