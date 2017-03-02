@@ -19,7 +19,7 @@ class Vocab(object):
     self.word_freq[word] += count
 
   def construct(self, words):
-    print("AAAA", words)
+    print("CCC", words)
     for word in words:
       self.add_word(word)
     self.total_words = float(sum(self.word_freq.values()))

@@ -48,18 +48,20 @@ class Config(object):
 
 class RNNLM_Model(LanguageModel):
 
-    def load_data(self, debug=False, search=False):
+    def load_data(self, debug=False):
         """Loads starter word-vectors and train/dev/test data."""
         path_train = 'data/ptb/ptb.train.txt'
         path_valid = 'data/ptb/ptb.valid.txt'
         path_test = 'data/ptb/ptb.test.txt'
-        if search:
+        if self.search:
           currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
           path_train = currentdir + "/" + path_train
           path_valid = currentdir + "/" + path_valid
           path_test = currentdir + "/" + path_test
         self.vocab = Vocab()
+        print("BEFORE", path_train)
         self.vocab.construct(get_ptb_dataset(path_train))
+        print("AFTER", path_train)
         self.encoded_train = np.array(
             [self.vocab.encode(word) for word in get_ptb_dataset(path_train)],
             dtype=np.int32)
@@ -257,7 +259,8 @@ class RNNLM_Model(LanguageModel):
 
     def __init__(self, config, debug=False, search=False):
         self.config = config
-        self.load_data(debug, search)
+        self.search = search
+        self.load_data(debug)
         self.add_placeholders()
         self.inputs = self.add_embedding()
         self.rnn_outputs = self.add_model(self.inputs)
