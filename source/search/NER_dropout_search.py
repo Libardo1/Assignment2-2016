@@ -1,3 +1,10 @@
+import os
+import sys
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
 import numpy as np
 from q2_NER import test_NER, Config
 import matplotlib
@@ -17,7 +24,7 @@ for dropout in DROPOUT:
     val_loss, duration = test_NER(config,
                                   save=False,
                                   verbose=False,
-                                  debug=True,
+                                  debug=False,
                                   search=True)
     results.append(val_loss)
     times.append(duration)
