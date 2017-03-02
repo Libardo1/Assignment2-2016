@@ -21,7 +21,8 @@ for lr in LEARNING_RATE:
     val_loss, duration = test_NER(config,
                                   save=False,
                                   verbose=False,
-                                  debug=False)
+                                  debug=True,
+                                  search=True)
     results.append(val_loss)
     times.append(duration)
 

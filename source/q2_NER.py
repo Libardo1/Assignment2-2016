@@ -61,13 +61,11 @@ class NERModel(LanguageModel):
         path_test = 'data/ner/test.masked'
         if search:
             currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-            print("AAAAAAAAAAAA", currentdir)
-            parentdir = os.path.dirname(currentdir)
-            path_vocab = parentdir + "/source/" + path_vocab
-            path_wordVectors = parentdir + "/source/" + path_wordVectors
-            path_train = parentdir + "/source/" + path_train
-            path_dev = parentdir + "/source/" + path_dev
-            path_test = parentdir + "/source/" + path_test
+            path_vocab = currentdir + "/" + path_vocab
+            path_wordVectors = currentdir + "/" + path_wordVectors
+            path_train = currentdir + "/" + path_train
+            path_dev = currentdir + "/" + path_dev
+            path_test = currentdir + "/" + path_test
         self.wv, word_to_num, num_to_word = ner.load_wv(
           path_vocab, path_wordVectors)
         tagnames = ['O', 'LOC', 'MISC', 'ORG', 'PER']
