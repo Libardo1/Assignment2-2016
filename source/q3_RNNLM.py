@@ -50,27 +50,24 @@ class RNNLM_Model(LanguageModel):
 
     def load_data(self, debug=False):
         """Loads starter word-vectors and train/dev/test data."""
-        if not self.search
-        self.path_train = 'data/ptb/ptb.train.txt'
-        self.path_valid = 'data/ptb/ptb.valid.txt'
-        self.path_test = 'data/ptb/ptb.test.txt'
-        else:
-          currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-          self.path_train = currentdir + "/" + 'data/ptb/ptb.train.txt'
-          self.path_valid = currentdir + "/" + 'data/ptb/ptb.valid.txt'
-          self.path_test = currentdir + "/" + 'data/ptb/ptb.test.txt'
+        path_train = 'data/ptb/ptb.train.txt'
+        path_valid = 'data/ptb/ptb.valid.txt'
+        path_test = 'data/ptb/ptb.test.txt'
+        if self.search:
+            currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+            path_train = currentdir + "/" + path_train
+            path_valid = currentdir + "/" + path_valid
+            path_test = currentdir + "/" + path_test
         self.vocab = Vocab()
-        print("BEFORE", self.path_train)
-        self.vocab.construct(get_ptb_dataset(self.path_train))
-        print("AFTER", self.path_train)
+        self.vocab.construct(get_ptb_dataset(path_train))
         self.encoded_train = np.array(
-            [self.vocab.encode(word) for word in get_ptb_dataset(self.path_train)],
+            [self.vocab.encode(word) for word in get_ptb_dataset(path_train)],
             dtype=np.int32)
         self.encoded_valid = np.array(
-            [self.vocab.encode(word) for word in get_ptb_dataset(self.path_valid)],
+            [self.vocab.encode(word) for word in get_ptb_dataset(path_valid)],
             dtype=np.int32)
         self.encoded_test = np.array(
-            [self.vocab.encode(word) for word in get_ptb_dataset(self.path_test)],
+            [self.vocab.encode(word) for word in get_ptb_dataset(path_test)],
             dtype=np.int32)
         if debug:
             num_debug = 1024
@@ -445,7 +442,7 @@ def test_RNNLM(config, save=True, debug=False, generate=False, search=False):
         # This instructs gen_model to reuse the same variables as the
         # model above
         scope.reuse_variables()
-        gen_model = RNNLM_Model(gen_config, search)
+        gen_model = RNNLM_Model(gen_config, debug, search)
 
     # init = tf.initialize_all_variables()
     init = tf.global_variables_initializer()

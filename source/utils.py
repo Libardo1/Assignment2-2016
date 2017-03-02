@@ -19,7 +19,6 @@ class Vocab(object):
     self.word_freq[word] += count
 
   def construct(self, words):
-    print("CCC", words)
     for word in words:
       self.add_word(word)
     self.total_words = float(sum(self.word_freq.values()))
@@ -44,7 +43,6 @@ def calculate_perplexity(log_probs):
   return np.exp(perp / len(log_probs))
 
 def get_ptb_dataset(path):
-  print(path)
   for line in open(path):
     for word in line.split():
       yield word
