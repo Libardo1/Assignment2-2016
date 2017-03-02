@@ -2,6 +2,7 @@ import os
 import getpass
 import sys
 import time
+import inspect
 
 import numpy as np
 import tensorflow as tf
@@ -58,8 +59,8 @@ class NERModel(LanguageModel):
         if search:
             currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
             parentdir = os.path.dirname(currentdir)
-            path_vocab = parentdir + "/" + path_vocab
-            path_wordVectors = parentdir + "/" + path_wordVectors
+            path_vocab = parentdir + "/source/" + path_vocab
+            path_wordVectors = parentdir + "/source/" + path_wordVectors
         self.wv, word_to_num, num_to_word = ner.load_wv(
           path_vocab, path_wordVectors)
         tagnames = ['O', 'LOC', 'MISC', 'ORG', 'PER']
