@@ -430,7 +430,7 @@ def save_predictions(predictions, filename):
             f.write(str(prediction) + "\n")
 
 
-def test_NER(config, save=True, verbose=True, debug=False, seach=False):
+def test_NER(config, save=True, verbose=True, debug=False, search=False):
     """Test NER model implementation.
     You can use this function to test your implementation of the Named Entity
     Recognition network. When debugging, set max_epochs in the Config object to
