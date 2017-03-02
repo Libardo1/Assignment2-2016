@@ -42,7 +42,7 @@ for i, lr in enumerate(LEARNING_RATE):
     config = Config(lr=lr)
     val_pp, duration = test_RNNLM(config,
                                   save=False,
-                                  debug=True,
+                                  debug=False,
                                   generate=False,
                                   search=True)
     results.append(val_pp)

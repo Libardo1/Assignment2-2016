@@ -37,7 +37,7 @@ for i, batch in enumerate(BATCH):
     config = Config(batch_size=batch)
     val_pp, duration = test_RNNLM(config,
                                   save=False,
-                                  debug=True,
+                                  debug=False,
                                   generate=False,
                                   search=True)
     results.append(val_pp)

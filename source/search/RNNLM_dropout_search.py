@@ -39,7 +39,7 @@ for i, dropout in enumerate(DROPOUT):
     config = Config(dropout=dropout)
     val_pp, duration = test_RNNLM(config,
                                   save=False,
-                                  debug=True,
+                                  debug=False,
                                   generate=False,
                                   search=True)
     results.append(val_pp)

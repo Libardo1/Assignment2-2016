@@ -37,7 +37,7 @@ for i, step in enumerate(STEP):
     config = Config(num_steps=step)
     val_pp, duration = test_RNNLM(config,
                                   save=False,
-                                  debug=True,
+                                  debug=False,
                                   generate=False,
                                   search=True)
     results.append(val_pp)
