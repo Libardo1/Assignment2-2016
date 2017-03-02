@@ -1,4 +1,10 @@
 import os
+import sys
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
 import argparse
 import smtplib
 from email.MIMEMultipart import MIMEMultipart
@@ -31,7 +37,8 @@ for i, batch in enumerate(BATCH):
     config = Config(batch_size=batch)
     val_pp, duration = test_RNNLM(config,
                                   save=False,
-                                  debug=False)
+                                  debug=True,
+                                  search=True)
     results.append(val_pp)
     times.append(duration)
 

@@ -1,6 +1,9 @@
 import getpass
 import sys
 import time
+import os
+import sys
+import inspect
 
 import numpy as np
 from copy import deepcopy
@@ -45,18 +48,22 @@ class Config(object):
 
 class RNNLM_Model(LanguageModel):
 
-    def load_data(self, debug=False):
+    def load_data(self, debug=False, search=False):
         """Loads starter word-vectors and train/dev/test data."""
+        if search:
+          path = currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        else:
+          path = search
         self.vocab = Vocab()
-        self.vocab.construct(get_ptb_dataset('train'))
+        self.vocab.construct(get_ptb_dataset('train', path))
         self.encoded_train = np.array(
-            [self.vocab.encode(word) for word in get_ptb_dataset('train')],
+            [self.vocab.encode(word) for word in get_ptb_dataset('train', path)],
             dtype=np.int32)
         self.encoded_valid = np.array(
-            [self.vocab.encode(word) for word in get_ptb_dataset('valid')],
+            [self.vocab.encode(word) for word in get_ptb_dataset('valid', path)],
             dtype=np.int32)
         self.encoded_test = np.array(
-            [self.vocab.encode(word) for word in get_ptb_dataset('test')],
+            [self.vocab.encode(word) for word in get_ptb_dataset('test', path)],
             dtype=np.int32)
         if debug:
             num_debug = 1024
@@ -244,9 +251,9 @@ class RNNLM_Model(LanguageModel):
         # ## END YOUR CODE
         return train_op
 
-    def __init__(self, config, debug=False):
+    def __init__(self, config, debug=False, search=False):
         self.config = config
-        self.load_data(debug)
+        self.load_data(debug, search)
         self.add_placeholders()
         self.inputs = self.add_embedding()
         self.rnn_outputs = self.add_model(self.inputs)
@@ -417,7 +424,7 @@ def generate_sentence(session, model, config, *args, **kwargs):
                          **kwargs)
 
 
-def test_RNNLM(config, save=True, debug=False, generate=False):
+def test_RNNLM(config, save=True, debug=False, generate=False, search=False):
     if debug:
         config = Config(max_epochs=1)
     gen_config = deepcopy(config)
@@ -426,11 +433,11 @@ def test_RNNLM(config, save=True, debug=False, generate=False):
 
     # We create the training model and generative model
     with tf.variable_scope('RNNLM') as scope:
-        model = RNNLM_Model(config, debug)
+        model = RNNLM_Model(config, debug, search)
         # This instructs gen_model to reuse the same variables as the
         # model above
         scope.reuse_variables()
-        gen_model = RNNLM_Model(gen_config)
+        gen_model = RNNLM_Model(gen_config, search)
 
     # init = tf.initialize_all_variables()
     init = tf.global_variables_initializer()
@@ -485,7 +492,7 @@ def test_RNNLM(config, save=True, debug=False, generate=False):
 
 if __name__ == "__main__":
     config = Config()
-    debug = False
+    debug = True
     save = True
     generate = True
     val_pp, duration = test_RNNLM(config, save, debug, generate)
